@@ -6,60 +6,71 @@
   <title>YOKU MOKU 結帳</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,sans-serif;background:linear-gradient(to bottom,#1e3a5f,#0f172a);min-height:100vh;color:#fff;padding:10px;font-size:16px}
-    h1{text-align:center;font-size:1.5rem;margin-bottom:10px}
+    body{font-family:-apple-system,sans-serif;background:#1e3a5f;min-height:100vh;color:#f5f0eb;padding:10px;font-size:18px;font-weight:bold}
+    h1{text-align:center;font-size:1.8rem;margin-bottom:10px;color:#fff;font-weight:bold}
     .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-    .tabs button{padding:8px 14px;border:none;border-radius:6px;background:#374151;color:#9ca3af;font-size:15px;cursor:pointer}
-    .tabs button.active{background:#4ade80;color:#000;font-weight:bold}
+    .tabs button{padding:10px 16px;border:none;border-radius:6px;background:#374151;color:#fff;font-size:17px;cursor:pointer;font-weight:bold}
+    .tabs button.active{background:#4ade80;color:#fff;font-weight:bold}
     .member-section{background:#374151;padding:10px;border-radius:8px;margin-bottom:10px}
     .member-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-    .member-row button{padding:7px 12px;border:none;border-radius:5px;font-size:14px;cursor:pointer;background:#1f2937;color:#9ca3af}
-    .member-row button.active{background:#f59e0b;color:#000;font-weight:bold}
-    .member-row label{font-size:14px;display:flex;align-items:center;gap:4px;color:#fde047}
+    .member-row button{padding:8px 14px;border:none;border-radius:5px;font-size:16px;cursor:pointer;background:#4b5563;color:#f5f0eb}
+    .member-row button.active{background:#6d6059;color:#f5f0eb;font-weight:bold}
+    .member-row label{font-size:16px;display:flex;align-items:center;gap:4px;color:#fde047}
     .section{margin-bottom:12px}
-    .section h2{font-size:15px;margin-bottom:6px;color:#fde047}
-    .product-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:6px;margin-bottom:5px;background:#1d4ed8}
+    .section h2{font-size:17px;margin-bottom:6px;color:#f5f0eb;font-weight:bold}
+    .product-row{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:6px;margin-bottom:5px;background:#1e3a8f}
     .product-row.combo{background:#be185d}
     .product-row.special{background:#7c3aed}
     .product-row.addon{background:#c2410c}
     .product-row.wood{background:#78350f}
     .product-row.cookie{background:#065f46}
-    .product-row.cake{background:#be185d}
+    .product-row.cake{background:#854d0e}
     .product-row.drink{background:#0369a1}
     .product-row.bag{background:#15803d}
+    .product-row.brown1{background:#b45309}
+    .product-row.brown2{background:#92400e}
+    .product-row.brown3{background:#78350f}
+    .product-row.brown4{background:#713f12}
+    .product-row.brown5{background:#a16207}
+    .product-row.brown6{background:#854d0e}
     .product-row .info{flex:1;min-width:0}
-    .product-row .name{font-size:14px;color:#e5e7eb}
-    .product-row .price{color:#fde047;font-weight:bold;font-size:15px}
+    .product-row .name{font-size:17px;color:#f5f0eb;margin-bottom:6px}
+    .product-row .price{color:#f5f0eb;font-weight:bold;font-size:18px}
     .qty-ctrl{display:flex;align-items:center;gap:3px}
-    .qty-ctrl button{width:32px;height:32px;border:none;border-radius:5px;font-size:18px;font-weight:bold;color:#fff;cursor:pointer}
-    .qty-ctrl .minus{background:#dc2626}
-    .qty-ctrl .plus{background:#16a34a}
-    .qty-ctrl input{width:45px;height:32px;text-align:center;border:none;border-radius:4px;font-size:16px}
+    .qty-ctrl button{width:36px;height:36px;border:none;border-radius:5px;font-size:20px;font-weight:bold;color:#f5f0eb;cursor:pointer}
+    .qty-ctrl .minus{background:#b7a7a8}
+    .qty-ctrl .plus{background:#34251f}
+    .qty-ctrl input{width:50px;height:36px;text-align:center;border:none;border-radius:4px;font-size:18px;background:#fff;color:#34251f}
     .cart{background:#1f2937;border-radius:8px;padding:10px;margin-bottom:10px}
-    .cart h3{font-size:16px;margin-bottom:8px;color:#fde047}
-    .cart-item{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-bottom:2px;font-size:14px;background:#374151;border-radius:4px}
+    .cart h3{font-size:18px;margin-bottom:8px;color:#fde047;font-weight:bold}
+    .cart-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin-bottom:2px;font-size:16px;background:#374151;border-radius:4px}
     .item-name{color:#e5e7eb;flex:1}
     .item-price{display:flex;gap:6px;align-items:center}
-    .price-orig{color:#9ca3af;text-decoration:line-through;font-size:13px}
-    .price-final{color:#4ade80;font-weight:bold;font-size:15px}
-    .cat-title{color:#60a5fa;font-size:13px;font-weight:bold;margin:10px 0 4px 0;padding-bottom:2px;border-bottom:1px solid #4b5563}
+    .price-orig{color:#9ca3af;text-decoration:line-through;font-size:15px}
+    .price-final{color:#4ade80;font-weight:bold;font-size:17px}
+    .cat-title{color:#60a5fa;font-size:15px;font-weight:bold;margin:10px 0 4px 0;padding-bottom:2px;border-bottom:1px solid #4b5563}
     .divider{border-top:2px solid #4b5563;margin:10px 0}
     .summary{background:#374151;padding:8px;border-radius:6px;margin-bottom:8px}
-    .summary-row{display:flex;justify-content:space-between;padding:4px 0;font-size:15px}
-    .summary-row.total{font-size:18px;font-weight:bold;padding-top:6px;border-top:1px solid #4b5563;margin-top:4px}
-    .clear-btn{width:100%;background:#dc2626;border:none;color:#fff;padding:12px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;margin-bottom:8px}
-    .note{font-size:13px;color:#fdba74;margin-top:4px}
-    .discount-info{background:#374151;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:13px}
+    .summary-row{display:flex;justify-content:space-between;padding:4px 0;font-size:17px;color:#e5e7eb}
+    .summary-row.total{font-size:24px;font-weight:bold;padding-top:6px;border-top:1px solid #4b5563;margin-top:4px}
+    .clear-btn{width:100%;background:#6d6059;border:none;color:#f5f0eb;padding:14px;border-radius:6px;font-size:18px;font-weight:bold;cursor:pointer;margin-bottom:8px}
+    .note{font-size:15px;color:#fdba74;margin-top:4px}
+    .discount-info{background:#374151;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:15px;color:#e5e7eb}
     .loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;z-index:1000;display:none}
     .loading.show{display:block}
     @media (max-width: 600px) {
-      body{font-size:17px}
-      h1{font-size:1.6rem}
-      .tabs button{font-size:16px;padding:10px 16px}
-      .product-row .name{font-size:15px}
-      .product-row .price{font-size:16px}
-      .summary-row.total{font-size:20px}
-      .clear-btn{font-size:18px;padding:14px}
+      body{font-size:20px}
+      h1{font-size:2rem}
+      .tabs button{font-size:18px;padding:12px 18px}
+      .product-row .name{font-size:18px}
+      .product-row .price{font-size:20px}
+      .cart h3{font-size:20px}
+      .cart-item{font-size:18px}
+      .summary-row{font-size:19px}
+      .summary-row.total{font-size:26px}
+      .clear-btn{font-size:20px;padding:16px}
+      .qty-ctrl button{width:40px;height:40px;font-size:22px}
+      .qty-ctrl input{width:55px;height:40px;font-size:20px}
     }
   </style>
 </head>
@@ -113,15 +124,22 @@ window.DATA={
   },
   cigare:{
     name:'🥚蛋捲',
-    items:[
+    original_small:[
       {id:'C1',name:'原味雪茄蛋捲10入',price:400},
       {id:'C2',name:'原味雪茄蛋捲14入',price:620},
+      {id:'PANDA16',name:'熊貓迷你雪茄16入',price:580}
+    ],
+    original_20:[
       {id:'YCG-D',name:'原味雪茄蛋捲(20入)',price:920},
       {id:'YCG-DR',name:'喜饌原味蛋捲(20入)',price:920},
       {id:'YCG-DJ',name:'【富士山】原味雪茄蛋捲(20入)',price:920},
-      {id:'YCG-DTW',name:'【台灣限定】幸福成雙原味雪茄蛋捲20入',price:920},
+      {id:'YCG-DTW',name:'【台灣限定】幸福成雙原味雪茄蛋捲20入',price:920}
+    ],
+    original_large:[
       {id:'C4',name:'原味雪茄蛋捲30入',price:1320},
-      {id:'C5',name:'原味雪茄蛋捲48入',price:2020},
+      {id:'C5',name:'原味雪茄蛋捲48入',price:2020}
+    ],
+    chocolate:[
       {id:'C6',name:'巧克力雪茄蛋捲8入',price:480},
       {id:'C7',name:'巧克力雪茄蛋捲18入',price:1120}
     ]
@@ -132,8 +150,8 @@ window.DATA={
       {id:'A1',name:'濃巧雙層巧克力薄片餅乾12入',price:400},
       {id:'A2',name:'濃巧雙層巧克力餅乾禮盒',price:820},
       {id:'A3',name:'濃巧雙層杏仁薄片餅乾禮盒',price:820},
-      {id:'A4',name:'濃巧夏威夷豆巧克力餅乾禮盒',price:920},
-      {id:'A5',name:'濃巧圓月煎餅乾禮盒',price:820}
+      {id:'A5',name:'濃巧圓月煎餅乾禮盒',price:820},
+      {id:'A4',name:'濃巧夏威夷豆巧克力餅乾禮盒',price:920}
     ]
   },
   baton:{
@@ -170,6 +188,22 @@ window.DATA={
 };
 
 window.S={cart:{},tab:'christmas',xm:false,m:'normal',bd:false,tv:0,tb:0,td:1,h:[]};
+
+function formatTime(date){
+  const h=date.getHours();
+  const m=date.getMinutes();
+  const period=h<12?'上午':'下午';
+  const h12=h%12||12;
+  const mm=m<10?'0'+m:m;
+  return period+h12+':'+mm;
+}
+
+function formatDateTime(date){
+  const y=date.getFullYear();
+  const mo=date.getMonth()+1;
+  const d=date.getDate();
+  return y+'/'+mo+'/'+d+' '+formatTime(date);
+}
 
 function showLoading(){document.getElementById('loading').classList.add('show')}
 function hideLoading(){document.getElementById('loading').classList.remove('show')}
@@ -237,13 +271,14 @@ function getBoxDis(){const s=window.S;const d=window.DATA.christmas;let bq=0;d.b
 function CO(productItems,teaItems,total){
   const allItems=[...productItems,...teaItems];
   if(allItems.length===0){alert('購物車是空的！');return}
-  const ts=new Date().toLocaleString('zh-TW');
+  const now=new Date();
+  const ts=formatDateTime(now);
   const record={time:ts,productItems:productItems,teaItems:teaItems,total:total,dragon:false};
   saveRecord(record);
   if(total===0){
-    alert('✅結帳成功！\n時間：'+ts+'\n總金額：$0（使用券）\n共 '+allItems.length+' 項商品');
+    alert('✅結帳成功！\n時間：'+formatTime(now)+'\n總金額：$0（使用券）\n共 '+allItems.length+' 項商品');
   }else{
-    alert('✅結帳成功！\n時間：'+ts+'\n總金額：$'+total.toLocaleString()+'\n共 '+allItems.length+' 項商品');
+    alert('✅結帳成功！\n時間：'+formatTime(now)+'\n總金額：$'+total.toLocaleString()+'\n共 '+allItems.length+' 項商品');
   }
   window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m='normal';window.S.bd=false;window.S.tab='records';R();
 }
@@ -260,7 +295,7 @@ function R(){
     const dragonTotal=s.h.filter(r=>r.dragon).reduce((sum,r)=>sum+r.total,0);
     const dragonCount=s.h.filter(r=>r.dragon).length;
     h+='<div class="discount-info">📅'+td+' | 共'+s.h.length+'筆 | 營業額$'+tt.toLocaleString();
-    if(dragonCount>0)h+=' | 🐉祥龍:'+dragonCount+'筆/$'+dragonTotal.toLocaleString();
+    if(dragonCount>0)h+=' | 祥龍:'+dragonCount+'筆/$'+dragonTotal.toLocaleString();
     h+='</div><div style="background:#1f2937;border-radius:8px;padding:10px;margin-bottom:10px;max-height:70vh;overflow-y:auto">';
     if(s.h.length===0){
       h+='<div style="color:#666;text-align:center;padding:20px">今天還沒有結帳記錄</div>';
@@ -272,29 +307,29 @@ function R(){
         h+='<div style="background:#374151;border-radius:6px;padding:10px;margin-bottom:8px'+(r.dragon?';border:2px solid #fbbf24':'')+'">';
         h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #4b5563">';
         h+='<div style="display:flex;align-items:center;gap:8px">';
-        h+='<b style="color:#fde047;font-size:14px">#'+n+'</b>';
-        h+='<span style="color:#9ca3af;font-size:12px">'+r.time+'</span>';
-        h+='<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#fde047;cursor:pointer;margin-left:8px">';
-        h+='<input type="checkbox"'+(r.dragon?' checked':'')+' onchange="toggleDragon('+i+')" style="cursor:pointer">🐉祥龍</label>';
+        h+='<b style="color:#fde047;font-size:17px">#'+n+'</b>';
+        h+='<span style="color:#9ca3af;font-size:14px">'+r.time+'</span>';
+        h+='<label style="display:flex;align-items:center;gap:4px;font-size:14px;color:#fde047;cursor:pointer;margin-left:8px">';
+        h+='<input type="checkbox"'+(r.dragon?' checked':'')+' onchange="toggleDragon('+i+')" style="cursor:pointer">祥龍</label>';
         h+='</div><div style="display:flex;align-items:center;gap:8px">';
-        h+='<b style="color:#4ade80;font-size:16px">$'+r.total.toLocaleString()+'</b>';
-        h+='<button onclick="deleteRecord('+i+')" style="background:#dc2626;border:none;color:#fff;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:16px">🗑️</button>';
+        h+='<b style="color:#4ade80;font-size:20px">$'+r.total.toLocaleString()+'</b>';
+        h+='<button onclick="deleteRecord('+i+')" style="background:#79635b;border:none;color:#fff;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:18px">🗑️</button>';
         h+='</div></div>';
-        h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px">';
+        h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:14px">';
         h+='<div style="background:#1f2937;padding:8px;border-radius:4px">';
-        h+='<div style="color:#60a5fa;font-weight:bold;margin-bottom:4px;font-size:12px">🍪 商品</div>';
+        h+='<div style="color:#60a5fa;font-weight:bold;margin-bottom:4px;font-size:15px">🍪 商品</div>';
         if(hasProducts){
-          r.productItems.forEach(it=>h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px">• '+it+'</div>');
+          r.productItems.forEach(it=>h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px;font-size:13px">• '+it+'</div>');
         }else{
-          h+='<div style="color:#666;font-style:italic">無</div>';
+          h+='<div style="color:#666;font-style:italic;font-size:13px">無</div>';
         }
         h+='</div>';
         h+='<div style="background:#1f2937;padding:8px;border-radius:4px">';
-        h+='<div style="color:#fbbf24;font-weight:bold;margin-bottom:4px;font-size:12px">☕ 下午茶</div>';
+        h+='<div style="color:#fbbf24;font-weight:bold;margin-bottom:4px;font-size:15px">☕ 下午茶</div>';
         if(hasTea){
-          r.teaItems.forEach(it=>h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px">• '+it+'</div>');
+          r.teaItems.forEach(it=>h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px;font-size:13px">• '+it+'</div>');
         }else{
-          h+='<div style="color:#666;font-style:italic">無</div>';
+          h+='<div style="color:#666;font-style:italic;font-size:13px">無</div>';
         }
         h+='</div></div></div>';
       });
@@ -306,24 +341,32 @@ function R(){
     h+='<div class="discount-info">📦盒裝:2盒'+(s.xm||s.m!=='normal'?'89':'95')+'折/50盒86折/101盒85折 | 🎁袋裝:3袋以上每袋$400</div>';
     h+='<div class="section"><h2>聖誕雙拼</h2>'+dd.combo.map(p=>'<div class="product-row combo"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>巧克力特惠</h2>'+dd.special.map(p=>'<div class="product-row special"><div class="info"><div class="name">'+p.name+'</div><div class="price"><s style="color:#999">$'+p.orig.toLocaleString()+'</s> → $'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
-    h+='<div class="section"><h2>盒裝</h2>'+dd.box.map(p=>'<div class="product-row"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>盒裝</h2>'+dd.box.map(p=>'<div class="product-row brown5"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>袋裝</h2>'+dd.bag.map(p=>'<div class="product-row bag"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>加購</h2>'+dd.addon.map(p=>'<div class="product-row addon"><div class="info"><div class="name">'+p.name+'</div><div class="price">+$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id,!(d.christmas.box.some(x=>Q(x.id)>0)||d.christmas.bag.some(x=>Q(x.id)>0)||d.christmas.combo.some(x=>Q(x.id)>0)))+'</div>').join('')+'<div class="note">※需先選購聖誕商品才能加購</div></div>';
   }else if(s.tab==='giftbox'){
     const gg=d.giftbox;
     h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;R()">生日月</label></div></div>';
     h+='<div class="discount-info">'+(s.m==='blue'?'💎藍鑽:'+(s.bd?'生日月9折':'95折'):s.m==='white'?'⬜白鑽:'+(s.bd?'生日月9折':'原價'):'一般:原價')+'</div>';
-    h+='<div class="section"><h2>🎁一般禮盒</h2>'+gg.general.map(p=>'<div class="product-row"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
-    h+='<div class="section"><h2>🎀雙拼禮盒</h2>'+gg.double.map(p=>'<div class="product-row"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>🎁一般禮盒</h2>'+gg.general.map(p=>'<div class="product-row brown2"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>🎀雙拼禮盒</h2>'+gg.double.map(p=>'<div class="product-row brown6"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
   }else if(s.tab==='tea'){
     const tt=d.tea;
     h+='<div class="discount-info">☕1蛋糕+1飲料=1套,飲料-$30</div>';
-    h+='<div style="background:#374151;padding:8px;border-radius:6px;margin-bottom:8px;font-size:12px"><b style="display:block;margin-bottom:6px">整單折扣:</b>';
-    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+[1,0.95,0.9,0.85,0.7].map(v=>'<button style="padding:4px 12px;border:none;border-radius:4px;cursor:pointer;'+(s.td===v?'background:#f59e0b;color:#000;font-weight:bold':'background:#1f2937;color:#9ca3af')+'" onclick="window.S.td='+v+';R()">'+(v===1?'無':Math.round(v*100)+'折')+'</button>').join('')+'</div>';
-    h+='<label>👑貴賓券:<input type="number" value="'+s.tv+'" min="0" style="width:40px" onchange="window.S.tv=Math.max(0,+this.value);R()">套</label><br>';
-    h+='<label style="margin-top:4px">🎂生日禮:<input type="number" value="'+s.tb+'" min="0" style="width:40px" onchange="window.S.tb=Math.max(0,+this.value);R()">套</label></div>';
+    h+='<div style="background:#374151;padding:8px;border-radius:6px;margin-bottom:8px;font-size:12px"><b style="display:block;margin-bottom:6px;color:#fde047">整單折扣:</b>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+[1,0.95,0.9,0.85,0.7].map(v=>'<button style="padding:4px 12px;border:none;border-radius:4px;cursor:pointer;'+(s.td===v?'background:#f59e0b;color:#fff;font-weight:bold':'background:#1f2937;color:#fff')+'" onclick="window.S.td='+v+';R()">'+(v===1?'無':Math.round(v*100)+'折')+'</button>').join('')+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><label style="min-width:80px">👑貴賓券:</label><div class="qty-ctrl"><button class="minus" onclick="window.S.tv=Math.max(0,window.S.tv-1);R()">-</button><input type="number" value="'+s.tv+'" onchange="window.S.tv=Math.max(0,+this.value);R()" style="width:50px"><button class="plus" onclick="window.S.tv++;R()">+</button></div><span>套</span></div>';
+    h+='<div style="display:flex;align-items:center;gap:8px"><label style="min-width:80px">🎂生日禮:</label><div class="qty-ctrl"><button class="minus" onclick="window.S.tb=Math.max(0,window.S.tb-1);R()">-</button><input type="number" value="'+s.tb+'" onchange="window.S.tb=Math.max(0,+this.value);R()" style="width:50px"><button class="plus" onclick="window.S.tb++;R()">+</button></div><span>套</span></div></div>';
     h+='<div class="section"><h2>蛋糕</h2>'+tt.cake.map(p=>'<div class="product-row cake"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>飲品</h2>'+tt.drink.map(p=>'<div class="product-row drink"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+  }else if(s.tab==='cigare'){
+    const cc=d.cigare;
+    h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;R()">生日月</label></div></div>';
+    h+='<div class="discount-info">'+(s.m==='blue'?'💎藍鑽:'+(s.bd?'生日月9折':'95折'):s.m==='white'?'⬜白鑽:'+(s.bd?'生日月9折':'原價'):'一般:原價')+'</div>';
+    h+='<div class="section"><h2>原味 10/14/16入</h2>'+cc.original_small.map(p=>'<div class="product-row brown1"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>原味 20入</h2>'+cc.original_20.map(p=>'<div class="product-row brown2"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>原味 30/48入</h2>'+cc.original_large.map(p=>'<div class="product-row brown3"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>巧克力</h2>'+cc.chocolate.map(p=>'<div class="product-row brown4"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
   }else{
     const cc=d[s.tab];
     const st=s.tab==='wood'?'wood':s.tab==='baton'?'cookie':'';
@@ -370,7 +413,7 @@ function R(){
     gt+=t;productItems.push('8入巧克力雪茄(加購) x'+q+' $'+t.toLocaleString());
   }
 
-  [{i:[...d.giftbox.general,...d.giftbox.double]},{i:d.cigare.items},{i:d.autumn.items},{i:d.baton.items},{i:d.wood.items}].forEach(c=>{
+  [{i:[...d.giftbox.general,...d.giftbox.double]},{i:[...d.cigare.original_small,...d.cigare.original_20,...d.cigare.original_large,...d.cigare.chocolate]},{i:d.autumn.items},{i:d.baton.items},{i:d.wood.items}].forEach(c=>{
     let cf=0;const ci=[];
     c.i.forEach(p=>{const q=Q(p.id);if(q>0){const f=Math.round(p.price*q*genDis);cf+=f;ci.push({p:p,q:q,f:f})}});
     if(ci.length>0){
@@ -388,8 +431,8 @@ function R(){
     const paidT=paid*(base-30)*s.td;const extraC=Math.max(0,cq-sets);const extraD=Math.max(0,dq-sets);
     const extraT=(extraC*ac+extraD*ad)*s.td;const tf=Math.round(paidT+extraT);
     h+='<div class="cat-title">下午茶 ('+sets+'套'+(free>0?' 含免費'+free+'套':'')+(s.td<1?' '+Math.round(s.td*100)+'折':'')+')</div>';
-    d.tea.cake.forEach(p=>{const q=Q(p.id);if(q>0){h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+(p.price*q).toLocaleString()+'</span></div>';teaItems.push(p.name+' x'+q)}});
-    d.tea.drink.forEach(p=>{const q=Q(p.id);if(q>0){h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+(p.price*q).toLocaleString()+'</span></div>';teaItems.push(p.name+' x'+q)}});
+    d.tea.cake.forEach(p=>{const q=Q(p.id);if(q>0){h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+(p.price*q).toLocaleString()+'</span></div>';teaItems.push(p.name+' x'+q+' $'+(p.price*q).toLocaleString())}});
+    d.tea.drink.forEach(p=>{const q=Q(p.id);if(q>0){h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+(p.price*q).toLocaleString()+'</span></div>';teaItems.push(p.name+' x'+q+' $'+(p.price*q).toLocaleString())}});
     if(sets>0){
       let setDesc='下午茶'+sets+'套';
       if(free>0)setDesc+=' (免費'+free+'套)';
@@ -406,7 +449,7 @@ function R(){
 
   h+='<div class="divider"></div><div class="summary"><div class="summary-row total"><span>應付金額</span><span style="color:#4ade80">$'+gt.toLocaleString()+'</span></div></div></div>';
   h+='<button class="clear-btn" style="background:#16a34a" onclick="CO('+JSON.stringify(productItems).replace(/"/g,"&quot;")+','+JSON.stringify(teaItems).replace(/"/g,"&quot;")+','+gt+')">💰結帳 $'+gt.toLocaleString()+'</button>';
-  h+='<button class="clear-btn" onclick="window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m=\'normal\';window.S.bd=false;R()">🗑️清空購物車</button>';
+  h+='<button class="clear-btn" style="background:#dc2626" onclick="window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m=\'normal\';window.S.bd=false;R()">🗑️清空購物車</button>';
 
   document.getElementById('app').innerHTML=h;
 }
