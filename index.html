@@ -217,7 +217,22 @@ async function loadRecords(){
     showLoading();
     const res=await fetch(SCRIPT_URL+'?action=getRecords');
     const data=await res.json();
-    window.S.h=(data.records||[]).map(r=>({...r,dragon:r.dragon||false}));
+    window.S.h=(data.records||[]).map(r=>{
+      // 確保時間格式正確
+      let timeStr = r.time;
+      if(timeStr && typeof timeStr === 'string' && timeStr.includes('T')){
+        // 如果是ISO格式，轉換成本地格式
+        const d = new Date(timeStr);
+        timeStr = formatDateTime(d);
+      }
+      return {
+        ...r,
+        time: timeStr,
+        dragon: r.dragon||false,
+        productItems: r.productItems||[],
+        teaItems: r.teaItems||[]
+      };
+    });
     hideLoading();
     R();
   }catch(e){
@@ -228,15 +243,33 @@ async function loadRecords(){
 
 async function saveRecord(record){
   try{
+    console.log('💾 開始儲存記錄到 Google Sheets');
+    console.log('SCRIPT_URL:', SCRIPT_URL);
+    console.log('記錄內容:', record);
+
+    if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+      alert('⚠️ 請先設定 Google Apps Script URL！\n在 HTML 第 83 行');
+      hideLoading();
+      return;
+    }
+
     showLoading();
     const body = new URLSearchParams();
     body.append('action','addRecord');
     body.append('record', JSON.stringify(record));
-    await fetch(SCRIPT_URL,{method:'POST',body:body});
+
+    console.log('發送請求到:', SCRIPT_URL);
+    const response = await fetch(SCRIPT_URL,{method:'POST',body:body});
+    console.log('儲存回應狀態:', response.status);
+
+    const responseText = await response.text();
+    console.log('儲存回應內容:', responseText);
+
     await loadRecords();
     hideLoading();
   }catch(e){
     hideLoading();
+    console.error('儲存錯誤:', e);
     alert('儲存失敗：'+e.message);
   }
 }
@@ -268,12 +301,24 @@ function A(i,d){SQ(i,Q(i)+d)}
 function getDis(){const s=window.S;if(s.m==='blue')return s.bd?0.9:0.95;if(s.m==='white')return s.bd?0.9:1;return 1}
 function getBoxDis(){const s=window.S;const d=window.DATA.christmas;let bq=0;d.box.forEach(p=>bq+=Q(p.id));if(bq>=101)return 0.85;if(bq>=50)return 0.86;if(bq>=2)return(s.xm||s.m!=='normal')?0.89:0.95;return 1}
 
-function CO(productItems,teaItems,total){
+// 全域變數存儲結帳數據
+window.checkoutData = {productItems:[], teaItems:[], total:0};
+
+function CO(){
+  const {productItems, teaItems, total} = window.checkoutData;
+
+  console.log('=== 結帳資料 ===');
+  console.log('商品項目:', productItems);
+  console.log('下午茶項目:', teaItems);
+  console.log('總金額:', total);
+
   const allItems=[...productItems,...teaItems];
   if(allItems.length===0){alert('購物車是空的！');return}
   const now=new Date();
   const ts=formatDateTime(now);
   const record={time:ts,productItems:productItems,teaItems:teaItems,total:total,dragon:false};
+
+  console.log('準備儲存的記錄:', record);
   saveRecord(record);
   if(total===0){
     alert('✅結帳成功！\n時間：'+formatTime(now)+'\n總金額：$0（使用券）\n共 '+allItems.length+' 項商品');
@@ -448,7 +493,16 @@ function R(){
   }
 
   h+='<div class="divider"></div><div class="summary"><div class="summary-row total"><span>應付金額</span><span style="color:#4ade80">$'+gt.toLocaleString()+'</span></div></div></div>';
-  h+='<button class="clear-btn" style="background:#16a34a" onclick="CO('+JSON.stringify(productItems).replace(/"/g,"&quot;")+','+JSON.stringify(teaItems).replace(/"/g,"&quot;")+','+gt+')">💰結帳 $'+gt.toLocaleString()+'</button>';
+
+  // 儲存結帳數據到全域變數
+  window.checkoutData = {productItems: productItems, teaItems: teaItems, total: gt};
+
+  console.log('📦 購物車構建完成');
+  console.log('商品數量:', productItems.length, '項目:', productItems);
+  console.log('下午茶數量:', teaItems.length, '項目:', teaItems);
+  console.log('總金額:', gt);
+
+  h+='<button class="clear-btn" style="background:#16a34a" onclick="CO()">💰結帳 $'+gt.toLocaleString()+'</button>';
   h+='<button class="clear-btn" style="background:#dc2626" onclick="window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m=\'normal\';window.S.bd=false;R()">🗑️清空購物車</button>';
 
   document.getElementById('app').innerHTML=h;
@@ -459,4 +513,3 @@ R();
 </script>
 </body>
 </html>
-
