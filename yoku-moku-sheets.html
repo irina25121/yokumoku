@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YOKU MOKU 結帳</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,sans-serif;background:linear-gradient(to bottom,#1e3a5f,#0f172a);min-height:100vh;color:#fff;padding:10px;font-size:14px}
+    h1{text-align:center;font-size:1.2rem;margin-bottom:8px}
+    .tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+    .tabs button{padding:6px 10px;border:none;border-radius:6px;background:#374151;color:#9ca3af;font-size:12px;cursor:pointer}
+    .tabs button.active{background:#4ade80;color:#000;font-weight:bold}
+    .member-section{background:#374151;padding:8px;border-radius:8px;margin-bottom:10px}
+    .member-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .member-row button{padding:5px 10px;border:none;border-radius:5px;font-size:12px;cursor:pointer;background:#1f2937;color:#9ca3af}
+    .member-row button.active{background:#f59e0b;color:#000;font-weight:bold}
+    .member-row label{font-size:12px;display:flex;align-items:center;gap:4px;color:#fde047}
+    .section{margin-bottom:12px}
+    .section h2{font-size:13px;margin-bottom:6px;color:#fde047}
+    .product-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:6px;margin-bottom:5px;background:#1d4ed8}
+    .product-row.combo{background:#be185d}
+    .product-row.special{background:#7c3aed}
+    .product-row.addon{background:#c2410c}
+    .product-row.wood{background:#78350f}
+    .product-row.cookie{background:#065f46}
+    .product-row.cake{background:#be185d}
+    .product-row.drink{background:#0369a1}
+    .product-row.bag{background:#15803d}
+    .product-row .info{flex:1;min-width:0}
+    .product-row .name{font-size:12px;color:#e5e7eb}
+    .product-row .price{color:#fde047;font-weight:bold;font-size:13px}
+    .qty-ctrl{display:flex;align-items:center;gap:3px}
+    .qty-ctrl button{width:26px;height:26px;border:none;border-radius:5px;font-size:14px;font-weight:bold;color:#fff;cursor:pointer}
+    .qty-ctrl .minus{background:#dc2626}
+    .qty-ctrl .plus{background:#16a34a}
+    .qty-ctrl input{width:36px;height:26px;text-align:center;border:none;border-radius:4px;font-size:13px}
+    .cart{background:#1f2937;border-radius:8px;padding:10px;margin-bottom:10px}
+    .cart h3{font-size:14px;margin-bottom:8px;color:#fde047}
+    .cart-item{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;margin-bottom:2px;font-size:12px;background:#374151;border-radius:4px}
+    .item-name{color:#e5e7eb;flex:1}
+    .item-price{display:flex;gap:6px;align-items:center}
+    .price-orig{color:#9ca3af;text-decoration:line-through;font-size:11px}
+    .price-final{color:#4ade80;font-weight:bold}
+    .cat-title{color:#60a5fa;font-size:11px;font-weight:bold;margin:10px 0 4px 0;padding-bottom:2px;border-bottom:1px solid #4b5563}
+    .divider{border-top:2px solid #4b5563;margin:10px 0}
+    .summary{background:#374151;padding:8px;border-radius:6px;margin-bottom:8px}
+    .summary-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}
+    .summary-row.total{font-size:16px;font-weight:bold;padding-top:6px;border-top:1px solid #4b5563;margin-top:4px}
+    .clear-btn{width:100%;background:#dc2626;border:none;color:#fff;padding:10px;border-radius:6px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px}
+    .note{font-size:11px;color:#fdba74;margin-top:4px}
+    .discount-info{background:#374151;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11px}
+    .loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;z-index:1000;display:none}
+    .loading.show{display:block}
+  </style>
+</head>
+<body>
+  <h1>🍪 YOKU MOKU 結帳</h1>
+  <div class="loading" id="loading">載入中...</div>
+  <div id="app">載入中...</div>
+<script>
+// ⚙️ 設定：請將此網址改為您的 Google Apps Script 網址
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytFdRa3_JiFlfoB2TTCd14tsfYJl93lnjvK1l6CE4iMIDNnmIuAPF4x8b7j9rZR1V0og/exec
+';
+
+window.DATA={records:{name:'📊記錄'},christmas:{name:'🎄聖誕',box:[{id:'YCG-DXM',name:'原味雪茄蛋捲20入',price:950},{id:'YAN-A',name:'薄片濃巧雙拼禮盒24入',price:850},{id:'YCN-A',name:'雪茄薄片濃巧富拼禮盒28入',price:1380},{id:'YCN-B',name:'雪茄薄片濃巧雙拼禮盒44入',price:2050},{id:'YHD-A',name:'臻饌濃巧禮盒30入',price:1500},{id:'YHD-B',name:'喜饌濃巧禮盒50入',price:2100}],bag:[{id:'YCG-AXM',name:'原味雪茄蛋捲10入',price:420},{id:'YBL-AXM',name:'濃巧雙層巧克力薄片餅乾12入',price:420}],combo:[{id:'XMAS-1',name:'聖誕雙拼單盒',price:1800},{id:'XMAS-2',name:'聖誕雙拼雙盒',price:3500}],special:[{id:'CHOCO18',name:'18入巧克力雪茄',price:660,orig:1120}],addon:[{id:'CHOCO8',name:'8入巧克力雪茄(加購)',price:300}]},giftbox:{name:'🎁禮盒',general:[{id:'G1',name:'臻饌濃巧禮盒',price:1280},{id:'G3',name:'喜饌濃巧禮盒',price:1980},{id:'G4',name:'盛饌濃巧禮盒',price:2580},{id:'G6',name:'特饌濃巧禮盒',price:2980}],double:[{id:'G2',name:'雪茄薄片濃巧雙拼禮盒',price:1880},{id:'G5',name:'雪茄薄片濃巧特雙拼禮盒',price:2880}]},cigare:{name:'🥚蛋捲',items:[{id:'C1',name:'原味雪茄蛋捲10入',price:400},{id:'C2',name:'原味雪茄蛋捲14入',price:620},{id:'YCG-D',name:'原味雪茄蛋捲(20入)',price:920},{id:'YCG-DR',name:'喜饌原味蛋捲(20入)',price:920},{id:'YCG-DJ',name:'【富士山】原味雪茄蛋捲(20入)',price:920},{id:'YCG-DTW',name:'【台灣限定】幸福成雙原味雪茄蛋捲20入',price:920},{id:'C4',name:'原味雪茄蛋捲30入',price:1320},{id:'C5',name:'原味雪茄蛋捲48入',price:2020},{id:'C6',name:'巧克力雪茄蛋捲8入',price:480},{id:'C7',name:'巧克力雪茄蛋捲18入',price:1120}]},autumn:{name:'🍂秋冬薄片',items:[{id:'A1',name:'濃巧雙層巧克力薄片餅乾12入',price:400},{id:'A2',name:'濃巧雙層巧克力餅乾禮盒',price:820},{id:'A3',name:'濃巧雙層杏仁薄片餅乾禮盒',price:820},{id:'A4',name:'濃巧夏威夷豆巧克力餅乾禮盒',price:920},{id:'A5',name:'濃巧圓月煎餅乾禮盒',price:820}]},baton:{name:'🍪餅乾棒',items:[{id:'B1',name:'焙茶拿鐵餅乾棒',price:520},{id:'B2',name:'奶油餅乾棒',price:520}]},wood:{name:'🪵木盒',items:[{id:'W1',name:'沐禾禮盒-小',price:580},{id:'W2',name:'沐禾禮盒-中',price:880},{id:'W3',name:'沐禾禮盒-大',price:1580}]},tea:{name:'☕下午茶',cake:[{id:'T1',name:'南青山生乳捲',price:220},{id:'T2',name:'草莓海綿蛋糕',price:280},{id:'T3',name:'巧克力奶油蛋糕',price:280},{id:'T4',name:'蒙布朗蛋糕',price:320},{id:'T5',name:'抹茶提拉米蘇',price:320}],drink:[{id:'D1',name:'經典手沖咖啡',price:150},{id:'D2',name:'伊藤園蜂蜜紅茶',price:150},{id:'D3',name:'伊藤園特選日式綠茶',price:150}]}};
+window.S={cart:{},tab:'christmas',xm:false,m:'normal',bd:false,tv:0,tb:0,td:1,h:[]};
+
+function showLoading(){document.getElementById('loading').classList.add('show')}
+function hideLoading(){document.getElementById('loading').classList.remove('show')}
+
+async function loadRecords(){
+  if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+    console.log('請先設定 Google Apps Script URL');
+    return;
+  }
+  try{
+    showLoading();
+    const res=await fetch(SCRIPT_URL+'?action=getRecords');
+    const data=await res.json();
+    window.S.h=data.records||[];
+    hideLoading();
+    R();
+  }catch(e){
+    hideLoading();
+    console.error('載入記錄失敗',e);
+  }
+}
+
+async function saveRecord(record){
+  if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+    alert('請先設定 Google Apps Script URL');
+    return;
+  }
+  try{
+    showLoading();
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'addRecord',record:record})
+    });
+    await loadRecords();
+    hideLoading();
+  }catch(e){
+    hideLoading();
+    alert('儲存失敗：'+e.message);
+  }
+}
+
+async function updateDragon(idx,dragon){
+  if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')return;
+  try{
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'updateDragon',index:idx,dragon:dragon})
+    });
+  }catch(e){
+    console.error('更新失敗',e);
+  }
+}
+
+async function deleteRecord(idx){
+  if(!confirm('確定要刪除這筆記錄？'))return;
+  if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')return;
+  try{
+    showLoading();
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'deleteRecord',index:idx})
+    });
+    await loadRecords();
+    hideLoading();
+  }catch(e){
+    hideLoading();
+    alert('刪除失敗：'+e.message);
+  }
+}
+
+function toggleDragon(idx){
+  window.S.h[idx].dragon=!window.S.h[idx].dragon;
+  updateDragon(idx,window.S.h[idx].dragon);
+  R();
+}
+
+function Q(i){return window.S.cart[i]||0}
+function SQ(i,v){v=Math.max(0,parseInt(v)||0);v>0?window.S.cart[i]=v:delete window.S.cart[i];R()}
+function A(i,d){SQ(i,Q(i)+d)}
+function getDis(){const s=window.S;if(s.m==='blue')return s.bd?0.9:0.95;if(s.m==='white')return s.bd?0.9:1;return 1}
+function getBoxDis(){const s=window.S;const d=window.DATA.christmas;let bq=0;d.box.forEach(p=>bq+=Q(p.id));if(bq>=101)return 0.85;if(bq>=50)return 0.86;if(bq>=2)return(s.xm||s.m!=='normal')?0.89:0.95;return 1}
+
+function CO(items,total,orig){
+  if(total===0){alert('購物車是空的！');return}
+  const ts=new Date().toLocaleString('zh-TW');
+  const record={time:ts,items:items,total:total,original:orig,saved:orig-total,dragon:false};
+  saveRecord(record);
+  alert('✅結帳成功！\n時間：'+ts+'\n原價：$'+orig.toLocaleString()+'\n實付：$'+total.toLocaleString()+'\n省了：$'+(orig-total).toLocaleString());
+  window.S.cart={};
+  window.S.tv=0;
+  window.S.tb=0;
+  window.S.td=1;
+  window.S.xm=false;
+  window.S.m='normal';
+  window.S.bd=false;
+  window.S.tab='records';
+}
+
+function R(){const s=window.S,d=window.DATA;const Q2=(i,dis)=>'<div class="qty-ctrl"><button class="minus" onclick="A(\''+i+'\',-1)">-</button><input type="number" value="'+Q(i)+'" onchange="SQ(\''+i+'\',this.value)"><button class="plus" onclick="A(\''+i+'\',1)"'+(dis?' style="background:#666"':'')+'>+</button></div>';let h='<div class="tabs">'+Object.keys(d).map(k=>'<button class="'+(s.tab===k?'active':'')+'" onclick="window.S.tab=\''+k+'\';R()">'+d[k].name+'</button>').join('')+'</div>';if(s.tab==='records'){const td=new Date().toLocaleDateString('zh-TW');const tt=s.h.reduce((sum,r)=>sum+r.total,0);const tto=s.h.reduce((sum,r)=>sum+(r.original||r.total),0);const tts=tto-tt;h+='<div class="discount-info">📅'+td+' | 共'+s.h.length+'筆 | 營業額$'+tt.toLocaleString()+(tts>0?' | 省$'+tts.toLocaleString():'')+'</div><div style="background:#1f2937;border-radius:8px;padding:10px;margin-bottom:10px;max-height:70vh;overflow-y:auto">';if(s.h.length===0)h+='<div style="color:#666;text-align:center;padding:20px">今天還沒有結帳記錄</div>';else{s.h.forEach((r,i)=>{const n=i+1;const sv=r.saved||0;h+='<div style="background:#374151;border-radius:6px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="display:flex;align-items:center;gap:8px"><b style="color:#fde047">#'+n+' '+r.time.split(' ')[1]+'</b><label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#fde047;cursor:pointer"><input type="checkbox"'+(r.dragon?' checked':'')+' onchange="toggleDragon('+i+')" style="cursor:pointer">祥龍</label></div><div style="display:flex;align-items:center;gap:8px"><div style="text-align:right"><b style="color:#4ade80;font-size:1.1rem">$'+r.total.toLocaleString()+'</b>'+(sv>0?'<div style="color:#fbbf24;font-size:10px">省$'+sv.toLocaleString()+'</div>':'')+'</div><button onclick="deleteRecord('+i+')" style="background:#dc2626;border:none;color:#fff;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:16px">🗑️</button></div></div><div style="font-size:11px;color:#9ca3af">';r.items.forEach(it=>h+='<div style="margin:2px 0">• '+it+'</div>');h+='</div></div>'})}h+='</div>'}else if(s.tab==='christmas'){const dd=d.christmas;h+='<div class="member-section"><div class="member-row"><button class="'+(!s.xm&&s.m==='normal'?'active':'')+'" onclick="window.S.xm=false;window.S.m=\'normal\';R()">一般</button><button class="'+(s.xm||s.m!=='normal'?'active':'')+'" onclick="window.S.xm=true;R()">👑會員</button></div></div><div class="discount-info">📦盒裝:2盒'+(s.xm||s.m!=='normal'?'89':'95')+'折/50盒86折/101盒85折 | 🎁袋裝:3袋以上每袋$400</div><div class="section"><h2>聖誕雙拼</h2>'+dd.combo.map(p=>'<div class="product-row combo"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div><div class="section"><h2>巧克力特惠</h2>'+dd.special.map(p=>'<div class="product-row special"><div class="info"><div class="name">'+p.name+'</div><div class="price"><s style="color:#999">$'+p.orig.toLocaleString()+'</s> → $'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div><div class="section"><h2>盒裝</h2>'+dd.box.map(p=>'<div class="product-row"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div><div class="section"><h2>袋裝</h2>'+dd.bag.map(p=>'<div class="product-row bag"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div><div class="section"><h2>加購</h2>'+dd.addon.map(p=>'<div class="product-row addon"><div class="info"><div class="name">'+p.name+'</div><div class="price">+$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id,!(d.christmas.box.some(x=>Q(x.id)>0)||d.christmas.bag.some(x=>Q(x.id)>0)||d.christmas.combo.some(x=>Q(x.id)>0)))+'</div>').join('')+'<div class="note">※需先選購聖誕商品才能加購</div></div>'}else if(s.tab==='giftbox'){const gg=d.giftbox;h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;R()">生日月</label></div></div><div class="discount-info">'+(s.m==='blue'?'💎藍鑽:'+(s.bd?'生日月9折':'95折'):s.m==='white'?'⬜白鑽:'+(s.bd?'生日月9折':'原價'):'一般:原價')+'</div><div class="section"><h2>🎁一般禮盒</h2>'+gg.general.map(p=>'<div class="product-row"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div><div class="section"><h2>🎀雙拼禮盒</h2>'+gg.double.map(p=>'<div class="product-row"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>'}else if(s.tab==='tea'){const tt=d.tea;h+='<div class="discount-info">☕1蛋糕+1飲料=1套,飲料-$30</div><div style="background:#374151;padding:8px;border-radius:6px;margin-bottom:8px;font-size:12px"><b style="display:block;margin-bottom:6px">整單折扣:</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+[1,0.95,0.9,0.85,0.7].map(v=>'<button style="padding:4px 12px;border:none;border-radius:4px;cursor:pointer;'+(s.td===v?'background:#f59e0b;color:#000;font-weight:bold':'background:#1f2937;color:#9ca3af')+'" onclick="window.S.td='+v+';R()">'+(v===1?'無':Math.round(v*100)+'折')+'</button>').join('')+'</div><label>👑貴賓券:<input type="number" value="'+s.tv+'" min="0" style="width:40px" onchange="window.S.tv=Math.max(0,+this.value);R()">套</label><br><label style="margin-top:4px">🎂生日禮:<input type="number" value="'+s.tb+'" min="0" style="width:40px" onchange="window.S.tb=Math.max(0,+this.value);R()">套</label></div><div class="section"><h2>蛋糕</h2>'+tt.cake.map(p=>'<div class="product-row cake"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div><div class="section"><h2>飲品</h2>'+tt.drink.map(p=>'<div class="product-row drink"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>'}else{const cc=d[s.tab];const st=s.tab==='wood'?'wood':s.tab==='baton'?'cookie':'';h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;R()">生日月</label></div></div><div class="discount-info">'+(s.m==='blue'?'💎藍鑽:'+(s.bd?'生日月9折':'95折'):s.m==='white'?'⬜白鑽:'+(s.bd?'生日月9折':'原價'):'一般:原價')+'</div><div class="section"><h2>'+cc.name+'</h2>'+cc.items.map(p=>'<div class="product-row '+st+'"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>'}let gt=0,got=0;const items=[];h+='<div class="cart"><h3>🛒 購物車</h3>';const boxDis=getBoxDis();const genDis=getDis();let hasXmas=false;if(d.christmas.combo.some(p=>Q(p.id)>0)){h+='<div class="cat-title">聖誕雙拼</div>';d.christmas.combo.forEach(p=>{const q=Q(p.id);if(q>0){const t=p.price*q;h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+t.toLocaleString()+'</span></div>';gt+=t;got+=t;items.push(p.name+' x'+q+' $'+t.toLocaleString());hasXmas=true}})}if(Q('CHOCO18')>0){const p=d.christmas.special[0];const q=Q('CHOCO18');const o=p.orig*q;const f=p.price*q;h+='<div class="cat-title">巧克力特惠</div><div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><div class="item-price"><span class="price-orig">$'+o.toLocaleString()+'</span><span class="price-final">$'+f.toLocaleString()+'</span></div></div>';gt+=f;got+=o;items.push(p.name+' x'+q+' 原$'+o.toLocaleString()+'→$'+f.toLocaleString());hasXmas=true}let boxCnt=0,boxOrig=0;d.christmas.box.forEach(p=>{const q=Q(p.id);if(q>0){boxCnt+=q;boxOrig+=p.price*q}});if(boxCnt>0){const boxFinal=Math.round(boxOrig*boxDis);h+='<div class="cat-title">聖誕盒裝'+(boxDis<1?' ('+Math.round(boxDis*100)+'折)':'')+'</div>';d.christmas.box.forEach(p=>{const q=Q(p.id);if(q>0){const o=p.price*q;const f=Math.round(o*boxDis);h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><div class="item-price">'+(boxDis<1?'<span class="price-orig">$'+o.toLocaleString()+'</span>':'')+'<span class="price-final">$'+f.toLocaleString()+'</span></div></div>';items.push(p.name+' x'+q+(boxDis<1?' 原$'+o.toLocaleString()+'→$'+f.toLocaleString():' $'+f.toLocaleString()))}});gt+=boxFinal;got+=boxOrig;hasXmas=true}let bagCnt=0,bagOrig=0;d.christmas.bag.forEach(p=>{const q=Q(p.id);if(q>0){bagCnt+=q;bagOrig+=p.price*q}});if(bagCnt>0){const bagFinal=bagCnt>=3?bagCnt*400:bagOrig;h+='<div class="cat-title">聖誕袋裝'+(bagCnt>=3?' (每袋$400)':'')+'</div>';d.christmas.bag.forEach(p=>{const q=Q(p.id);if(q>0){const o=p.price*q;const f=bagCnt>=3?400*q:o;h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><div class="item-price">'+(f<o?'<span class="price-orig">$'+o.toLocaleString()+'</span>':'')+'<span class="price-final">$'+f.toLocaleString()+'</span></div></div>';items.push(p.name+' x'+q+(f<o?' 原$'+o.toLocaleString()+'→$'+f.toLocaleString():' $'+f.toLocaleString()))}});gt+=bagFinal;got+=bagOrig;hasXmas=true}if(Q('CHOCO8')>0&&hasXmas){const q=Q('CHOCO8');const t=300*q;h+='<div class="cat-title">加購</div><div class="cart-item"><span class="item-name">8入巧克力雪茄 x'+q+'</span><span class="price-final">$'+t.toLocaleString()+'</span></div>';gt+=t;got+=t;items.push('8入巧克力雪茄(加購) x'+q+' $'+t.toLocaleString())}[{k:'giftbox',i:[...d.giftbox.general,...d.giftbox.double],n:'禮盒'},{k:'cigare',i:d.cigare.items,n:d.cigare.name},{k:'autumn',i:d.autumn.items,n:d.autumn.name},{k:'baton',i:d.baton.items,n:d.baton.name},{k:'wood',i:d.wood.items,n:d.wood.name}].forEach(c=>{let co=0,cf=0;const ci=[];c.i.forEach(p=>{const q=Q(p.id);if(q>0){const o=p.price*q;const f=Math.round(o*genDis);co+=o;cf+=f;ci.push({p:p,q:q,o:o,f:f})}});if(ci.length>0){h+='<div class="cat-title">'+c.n+(genDis<1?' ('+Math.round(genDis*100)+'折)':'')+'</div>';ci.forEach(it=>{h+='<div class="cart-item"><span class="item-name">'+it.p.name+' x'+it.q+'</span><div class="item-price">'+(genDis<1?'<span class="price-orig">$'+it.o.toLocaleString()+'</span>':'')+'<span class="price-final">$'+it.f.toLocaleString()+'</span></div></div>';items.push(it.p.name+' x'+it.q+(genDis<1?' 原$'+it.o.toLocaleString()+'→$'+it.f.toLocaleString():' $'+it.f.toLocaleString()))});gt+=cf;got+=co}});let cq=0,ct=0,dq=0,dt=0;d.tea.cake.forEach(p=>{const q=Q(p.id);if(q>0){cq+=q;ct+=p.price*q}});d.tea.drink.forEach(p=>{const q=Q(p.id);if(q>0){dq+=q;dt+=p.price*q}});if(cq>0||dq>0){const sets=Math.min(cq,dq);const free=Math.min(sets,s.tv+s.tb);const paid=Math.max(0,sets-free);const ac=cq>0?ct/cq:0;const ad=dq>0?dt/dq:150;const base=ac+ad;const paidT=paid*(base-30)*s.td;const extraC=Math.max(0,cq-sets);const extraD=Math.max(0,dq-sets);const extraT=(extraC*ac+extraD*ad)*s.td;const tf=Math.round(paidT+extraT);const to=ct+dt;const freeV=Math.round(free*base);h+='<div class="cat-title">下午茶 ('+sets+'套'+(free>0?' 含免費'+free+'套':'')+(s.td<1?' '+Math.round(s.td*100)+'折':'')+')</div>';d.tea.cake.forEach(p=>{const q=Q(p.id);if(q>0)h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+(p.price*q).toLocaleString()+'</span></div>'});d.tea.drink.forEach(p=>{const q=Q(p.id);if(q>0)h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+(p.price*q).toLocaleString()+'</span></div>'});if(free>0||s.td<1){h+='<div class="cart-item" style="background:#065f46"><span class="item-name">套餐優惠'+(free>0?' (免費'+free+'套 -$'+freeV.toLocaleString()+')':'')+(s.td<1?' ('+Math.round(s.td*100)+'折)':'')+'</span></div>'}items.push('下午茶'+sets+'套'+(free>0?' 含免費'+free+'套':'')+' 原$'+to.toLocaleString()+'→$'+tf.toLocaleString());gt+=tf;got+=to}if(gt===0)h+='<div style="color:#666;text-align:center;padding:20px;font-size:12px">購物車是空的</div>';const save=got-gt;h+='<div class="divider"></div><div class="summary">'+(save>0?'<div class="summary-row"><span>原價:</span><span style="color:#9ca3af">$'+got.toLocaleString()+'</span></div><div class="summary-row"><span>折扣:</span><span style="color:#f87171">-$'+save.toLocaleString()+'</span></div>':'')+'<div class="summary-row total"><span>應付金額</span><span style="color:#4ade80">$'+gt.toLocaleString()+'</span></div></div></div>';h+='<button class="clear-btn" style="background:#16a34a" onclick="CO('+JSON.stringify(items).replace(/"/g,"&quot;")+','+gt+','+got+')">💰結帳 $'+gt.toLocaleString()+(save>0?' (省$'+save.toLocaleString()+')':'')+'</button>';h+='<button class="clear-btn" onclick="window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m=\'normal\';window.S.bd=false;R()">🗑️清空購物車</button>';document.getElementById('app').innerHTML=h}
+
+loadRecords();
+R();
+</script>
+</body>
+</html>
