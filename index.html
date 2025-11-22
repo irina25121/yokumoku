@@ -87,22 +87,21 @@ async function loadRecords(){
 }
 
 async function saveRecord(record){
-  if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
-    alert('請先設定 Google Apps Script URL');
-    return;
-  }
   try{
-    showLoading();
-    await fetch(SCRIPT_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'addRecord',record:record})
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'addRecord',
+        record: record
+      })
     });
-    await loadRecords();
-    hideLoading();
-  }catch(e){
-    hideLoading();
-    alert('儲存失敗：'+e.message);
+
+    const data = await res.json();
+    if (!data.success) {
+      alert('❌儲存失敗：' + data.message);
+    }
+  } catch (e) {
+    alert('❌儲存錯誤：' + e.message);
   }
 }
 
@@ -152,7 +151,7 @@ function getBoxDis(){const s=window.S;const d=window.DATA.christmas;let bq=0;d.b
 function CO(items,total,orig){
   if(total===0){alert('購物車是空的！');return}
   const ts=new Date().toLocaleString('zh-TW');
-  const record={time:ts,items:items,total:total,original:orig,saved:orig-total,dragon:false};
+ const record = { time: ts, items: items, total: total, dragon: false };
   saveRecord(record);
   alert('✅結帳成功！\n時間：'+ts+'\n原價：$'+orig.toLocaleString()+'\n實付：$'+total.toLocaleString()+'\n省了：$'+(orig-total).toLocaleString());
   window.S.cart={};
@@ -172,4 +171,5 @@ R();
 </script>
 </body>
 </html>
+
 
