@@ -382,6 +382,11 @@ window.checkoutData = {productItems:[], teaItems:[], total:0};
 function CO(){
   const {productItems, teaItems, total} = window.checkoutData;
   const s = window.S;
+// 🔥 強制從畫面抓取最新備註（即使 window.S.notes 沒更新也能抓到）
+const notesInput = document.getElementById('notesInput');
+if (notesInput) {
+  s.notes = notesInput.value;
+}
 
   // 使用手動金額或計算金額
   const finalTotal = s.manualAmount > 0 ? s.manualAmount : total;
@@ -902,7 +907,11 @@ function R(){
     h+='</div>';
     h+='<div style="display:flex;align-items:center;gap:8px">';
     h+='<label style="color:#fde047;min-width:80px">📝 備註:</label>';
-    h+='<input type="text" value="'+s.notes+'" onchange="window.S.notes=this.value;saveState();R()" placeholder="輸入備註..." style="flex:1;padding:6px;border-radius:4px;border:1px solid #4b5563;background:#1f2937;color:#fff">';
+h+='<input id="notesInput" type="text" value="'+s.notes+'" '+
+   'oninput="window.S.notes=this.value;saveState()" '+
+   'placeholder="輸入備註..." '+
+   'style="flex:1;padding:6px;border-radius:4px;border:1px solid #4b5563;background:#1f2937;color:#fff">';
+
     h+='</div></div>';
 
     const finalAmount=s.manualAmount>0?s.manualAmount:gt;
