@@ -360,16 +360,24 @@ async function toggleDragon(idx){
 function openTeaSummary(){
   // 統計下午茶銷售資料
   const stats = {
-    cakes: {},      // 蛋糕統計 {name: {regular: count, voucher: count, gift: count}}
-    drinks: {},     // 飲料統計 {name: {regular: count, gift: count}}
+    cakes: {},      // 蛋糕統計 {name: {regular: count, voucher: count, gift: count, price: number, total: number}}
+    drinks: {},     // 飲料統計 {name: {regular: count, voucher: count, gift: count, price: number, total: number}}
     voucherCount: 0,  // 貴賓券數量
     birthdayCount: 0, // 生日禮數量
+    setCount: 0,      // 套餐數量（用於計算-$30折扣）
     totalAmount: 0    // 總金額
   };
 
-  // 下午茶商品列表（用於判斷類別）
+  // 下午茶商品列表（用於判斷類別和價格）
   const cakeNames = ['南青山生乳捲', '草莓海綿蛋糕', '巧克力奶油蛋糕', '蒙布朗蛋糕', '抹茶提拉米蘇', '一捲南山生乳捲(冷凍)'];
   const drinkNames = ['經典手沖咖啡', '伊藤園蜂蜜紅茶', '伊藤園特選日式綠茶'];
+
+  // 商品價格表
+  const d = window.DATA;
+  const priceMap = {};
+  d.tea.cake.forEach(p => priceMap[p.name] = p.price);
+  d.tea.drink.forEach(p => priceMap[p.name] = p.price);
+  d.tea.roll.forEach(p => priceMap[p.name] = p.price);
 
   // 遍歷所有記錄的下午茶項目
   window.S.h.forEach(record=>{
@@ -386,15 +394,15 @@ function openTeaSummary(){
 
           // 初始化蛋糕統計（分regular、voucher、gift）
           if(!stats.cakes[cakeName]){
-            stats.cakes[cakeName]={regular:0, voucher:0, gift:0};
+            stats.cakes[cakeName]={regular:0, voucher:0, gift:0, price:priceMap[cakeName]||0, total:0};
           }
           stats.cakes[cakeName].voucher++;
 
-          // 飲料統計
+          // 飲料統計（貴賓券的飲料也是免費的）
           if(!stats.drinks[drinkName]){
-            stats.drinks[drinkName]={regular:0, gift:0};
+            stats.drinks[drinkName]={regular:0, voucher:0, gift:0, price:priceMap[drinkName]||0, total:0};
           }
-          stats.drinks[drinkName].regular++;
+          stats.drinks[drinkName].voucher++;
 
           // 計數券種類
           if(item.includes('👑貴賓券'))stats.voucherCount++;
@@ -414,12 +422,12 @@ function openTeaSummary(){
           // 判斷是蛋糕還是飲料
           if(cakeNames.includes(productName)){
             if(!stats.cakes[productName]){
-              stats.cakes[productName]={regular:0, voucher:0, gift:0};
+              stats.cakes[productName]={regular:0, voucher:0, gift:0, price:priceMap[productName]||0, total:0};
             }
             stats.cakes[productName].gift+=qty;
           }else if(drinkNames.includes(productName)){
             if(!stats.drinks[productName]){
-              stats.drinks[productName]={regular:0, gift:0};
+              stats.drinks[productName]={regular:0, voucher:0, gift:0, price:priceMap[productName]||0, total:0};
             }
             stats.drinks[productName].gift+=qty;
           }
@@ -445,14 +453,19 @@ function openTeaSummary(){
           const drinkName=match[2].trim();
 
           if(!stats.cakes[cakeName]){
-            stats.cakes[cakeName]={regular:0, voucher:0, gift:0};
+            stats.cakes[cakeName]={regular:0, voucher:0, gift:0, price:priceMap[cakeName]||0, total:0};
           }
           stats.cakes[cakeName].regular++;
+          stats.cakes[cakeName].total += stats.cakes[cakeName].price;
 
           if(!stats.drinks[drinkName]){
-            stats.drinks[drinkName]={regular:0, gift:0};
+            stats.drinks[drinkName]={regular:0, voucher:0, gift:0, price:priceMap[drinkName]||0, total:0};
           }
           stats.drinks[drinkName].regular++;
+          stats.drinks[drinkName].total += stats.drinks[drinkName].price;
+
+          // 計算套餐數量
+          stats.setCount++;
         }
       }else{
         // 單品
@@ -460,18 +473,27 @@ function openTeaSummary(){
         // 判斷是蛋糕還是飲料
         if(itemName.includes('蛋糕')||itemName.includes('捲')||itemName.includes('提拉米蘇')){
           if(!stats.cakes[itemName]){
-            stats.cakes[itemName]={regular:0, voucher:0, gift:0};
+            stats.cakes[itemName]={regular:0, voucher:0, gift:0, price:priceMap[itemName]||0, total:0};
           }
           stats.cakes[itemName].regular++;
+          stats.cakes[itemName].total += stats.cakes[itemName].price;
         }else{
           if(!stats.drinks[itemName]){
-            stats.drinks[itemName]={regular:0, gift:0};
+            stats.drinks[itemName]={regular:0, voucher:0, gift:0, price:priceMap[itemName]||0, total:0};
           }
           stats.drinks[itemName].regular++;
+          stats.drinks[itemName].total += stats.drinks[itemName].price;
         }
       }
     });
   });
+
+  // 計算總金額（商品小計 - 套餐折扣）
+  let calculatedTotal = 0;
+  Object.values(stats.cakes).forEach(c => calculatedTotal += c.total);
+  Object.values(stats.drinks).forEach(d => calculatedTotal += d.total);
+  calculatedTotal -= stats.setCount * 30; // 扣除套餐折扣
+  stats.totalAmount = calculatedTotal;
 
   // 生成 HTML 內容
   const html=`<!DOCTYPE html>
@@ -506,38 +528,53 @@ function openTeaSummary(){
     <div class="summary-title">☕ 商品銷售明細</div>
     <table>
       <tr>
-        <th style="width:30%">類別</th>
-        <th style="width:50%">商品</th>
-        <th style="text-align:right">數量</th>
+        <th style="width:25%">類別</th>
+        <th style="width:35%">商品</th>
+        <th style="text-align:right;width:15%">數量</th>
+        <th style="text-align:right;width:12%">單價</th>
+        <th style="text-align:right;width:13%">小計</th>
       </tr>
       ${Object.keys(stats.cakes).length>0?Object.entries(stats.cakes).map(([name,counts],idx)=>{
         const totalCount=counts.regular+counts.voucher+counts.gift;
+        const payCount=counts.regular; // 只有regular購買的才算錢
         let details=[];
         if(counts.voucher>0)details.push('貴賓券'+counts.voucher+'份');
         if(counts.gift>0)details.push('贈送'+counts.gift+'份');
-        const countText=details.length>0
-          ?totalCount+' 份<span class="voucher-note">('+details.join('、')+')</span>'
-          :totalCount+' 份';
+        const countText=totalCount+' 份'+(details.length>0?'<span class="voucher-note">('+details.join('、')+')</span>':'');
         return `
       <tr>
         <td>${idx===0?'<b>🍰 蛋糕</b>':''}</td>
         <td>${name}</td>
         <td style="text-align:right;color:#4ade80;font-weight:bold">${countText}</td>
+        <td style="text-align:right;color:#9ca3af">${payCount>0?'$'+counts.price.toLocaleString():'-'}</td>
+        <td style="text-align:right;color:#4ade80;font-weight:bold">${payCount>0?'$'+counts.total.toLocaleString():'-'}</td>
       </tr>`;
-      }).join(''):'<tr><td><b>🍰 蛋糕</b></td><td colspan="2">無</td></tr>'}
-      <tr style="border-top:2px solid #4b5563"><td colspan="3"></td></tr>
+      }).join(''):'<tr><td><b>🍰 蛋糕</b></td><td colspan="4">無</td></tr>'}
+      <tr style="border-top:2px solid #4b5563"><td colspan="5"></td></tr>
       ${Object.keys(stats.drinks).length>0?Object.entries(stats.drinks).map(([name,counts],idx)=>{
-        const totalCount=counts.regular+counts.gift;
-        const countText=counts.gift>0
-          ?totalCount+' 份<span class="voucher-note">(贈送'+counts.gift+'份)</span>'
-          :totalCount+' 份';
+        const totalCount=counts.regular+counts.voucher+counts.gift;
+        const payCount=counts.regular; // 只有regular購買的才算錢
+        let details=[];
+        if(counts.voucher>0)details.push('貴賓券'+counts.voucher+'杯');
+        if(counts.gift>0)details.push('贈送'+counts.gift+'杯');
+        const countText=totalCount+' 杯'+(details.length>0?'<span class="voucher-note">('+details.join('、')+')</span>':'');
         return `
       <tr>
         <td>${idx===0?'<b>☕ 飲料</b>':''}</td>
         <td>${name}</td>
         <td style="text-align:right;color:#4ade80;font-weight:bold">${countText}</td>
+        <td style="text-align:right;color:#9ca3af">${payCount>0?'$'+counts.price.toLocaleString():'-'}</td>
+        <td style="text-align:right;color:#4ade80;font-weight:bold">${payCount>0?'$'+counts.total.toLocaleString():'-'}</td>
       </tr>`;
-      }).join(''):'<tr><td><b>☕ 飲料</b></td><td colspan="2">無</td></tr>'}
+      }).join(''):'<tr><td><b>☕ 飲料</b></td><td colspan="4">無</td></tr>'}
+      ${stats.setCount>0?`
+      <tr style="border-top:2px solid #4b5563">
+        <td colspan="2" style="text-align:right;color:#f59e0b;font-weight:bold">套餐折扣</td>
+        <td style="text-align:right;color:#f59e0b;font-weight:bold">${stats.setCount} 套</td>
+        <td style="text-align:right;color:#9ca3af">-$30</td>
+        <td style="text-align:right;color:#f87171;font-weight:bold">-$${(stats.setCount*30).toLocaleString()}</td>
+      </tr>
+      `:''}
     </table>
   </div>
 
@@ -545,6 +582,30 @@ function openTeaSummary(){
     <div class="total-row">
       <span>總金額</span>
       <span>$${stats.totalAmount.toLocaleString()}</span>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <div class="summary-title">🎁 贈送 + 貴賓券統計</div>
+    <div style="padding:10px">
+      <div style="margin-bottom:15px">
+        <div style="color:#f59e0b;font-weight:bold;font-size:16px;margin-bottom:8px">🍰 蛋糕</div>
+        ${Object.entries(stats.cakes).filter(([name,counts])=>counts.voucher>0||counts.gift>0).length>0
+          ?Object.entries(stats.cakes).filter(([name,counts])=>counts.voucher>0||counts.gift>0).map(([name,counts])=>{
+            const freeCount=counts.voucher+counts.gift;
+            return '<div style="color:#e5e7eb;padding:4px 0;padding-left:20px">'+name+'：'+freeCount+' 塊</div>';
+          }).join('')
+          :'<div style="color:#666;padding-left:20px;font-style:italic">無</div>'}
+      </div>
+      <div>
+        <div style="color:#f59e0b;font-weight:bold;font-size:16px;margin-bottom:8px">☕ 飲料</div>
+        ${Object.entries(stats.drinks).filter(([name,counts])=>counts.voucher>0||counts.gift>0).length>0
+          ?Object.entries(stats.drinks).filter(([name,counts])=>counts.voucher>0||counts.gift>0).map(([name,counts])=>{
+            const freeCount=counts.voucher+counts.gift;
+            return '<div style="color:#e5e7eb;padding:4px 0;padding-left:20px">'+name+'：'+freeCount+' 杯</div>';
+          }).join('')
+          :'<div style="color:#666;padding-left:20px;font-style:italic">無</div>'}
+      </div>
     </div>
   </div>
 
