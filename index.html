@@ -215,7 +215,9 @@ function saveState(){
       bd: window.S.bd,
       tv: window.S.tv,
       tb: window.S.tb,
-      td: window.S.td
+      td: window.S.td,
+      giftProduct: window.S.giftProduct,
+      giftQty: window.S.giftQty
     };
     localStorage.setItem('YOKU_MOKU_STATE', JSON.stringify(data));
     console.log('💾 暫存已儲存');
@@ -232,10 +234,21 @@ function clearState(){
 
 // 初始化狀態（優先使用暫存資料）
 const savedState = loadState();
-window.S = savedState || {cart:{},tab:'christmas',xm:false,m:'normal',bd:false,tv:0,tb:0,td:1,h:[],manualAmount:0,notes:''};
+window.S = savedState || {cart:{},tab:'christmas',xm:false,m:'normal',bd:false,tv:0,tb:0,td:1,h:[],manualAmount:0,notes:'',giftProduct:'',giftQty:0};
 if(!window.S.h) window.S.h = [];
 if(window.S.manualAmount===undefined) window.S.manualAmount = 0;
 if(window.S.notes===undefined) window.S.notes = '';
+if(window.S.giftProduct===undefined) window.S.giftProduct = '';
+if(window.S.giftQty===undefined) window.S.giftQty = 0;
+
+// Debounce 函數 - 防止頻繁呼叫造成當機
+let saveDebounceTimer;
+function debouncedSave(){
+  clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(()=>{
+    saveState();
+  }, 300); // 300ms 延遲
+}
 
 function formatTime(date){
   const h=date.getHours();
@@ -327,9 +340,242 @@ async function saveRecord(record){
   }
 }
 
-function toggleDragon(idx){
+async function toggleDragon(idx){
   window.S.h[idx].dragon=!window.S.h[idx].dragon;
   R();
+
+  // 更新 Google Sheets 中的祥龍狀態
+  try{
+    const body = new URLSearchParams();
+    body.append('action','updateDragon');
+    body.append('index', String(idx));
+    body.append('dragon', String(window.S.h[idx].dragon));
+    await fetch(SCRIPT_URL,{method:'POST',body:body});
+    console.log('✅ 祥龍狀態已儲存到 Google Sheets');
+  }catch(e){
+    console.error('儲存祥龍狀態失敗:', e);
+  }
+}
+
+function openTeaSummary(){
+  // 統計下午茶銷售資料
+  const stats = {
+    cakes: {},      // 蛋糕統計 {name: {regular: count, voucher: count, gift: count}}
+    drinks: {},     // 飲料統計 {name: {regular: count, gift: count}}
+    voucherCount: 0,  // 貴賓券數量
+    birthdayCount: 0, // 生日禮數量
+    totalAmount: 0    // 總金額
+  };
+
+  // 下午茶商品列表（用於判斷類別）
+  const cakeNames = ['南青山生乳捲', '草莓海綿蛋糕', '巧克力奶油蛋糕', '蒙布朗蛋糕', '抹茶提拉米蘇', '一捲南山生乳捲(冷凍)'];
+  const drinkNames = ['經典手沖咖啡', '伊藤園蜂蜜紅茶', '伊藤園特選日式綠茶'];
+
+  // 遍歷所有記錄的下午茶項目
+  window.S.h.forEach(record=>{
+    if(!record.teaItems||record.teaItems.length===0)return;
+
+    record.teaItems.forEach(item=>{
+      // 處理貴賓券和生日禮
+      if(item.includes('👑貴賓券')||item.includes('🎂生日禮')){
+        // 格式: "👑貴賓券 (蛋糕名 + 飲料名) -$價格"
+        const match=item.match(/[👑🎂][^(]+\((.+?)\s*\+\s*(.+?)\)/);
+        if(match){
+          const cakeName=match[1].trim();
+          const drinkName=match[2].trim();
+
+          // 初始化蛋糕統計（分regular、voucher、gift）
+          if(!stats.cakes[cakeName]){
+            stats.cakes[cakeName]={regular:0, voucher:0, gift:0};
+          }
+          stats.cakes[cakeName].voucher++;
+
+          // 飲料統計
+          if(!stats.drinks[drinkName]){
+            stats.drinks[drinkName]={regular:0, gift:0};
+          }
+          stats.drinks[drinkName].regular++;
+
+          // 計數券種類
+          if(item.includes('👑貴賓券'))stats.voucherCount++;
+          else stats.birthdayCount++;
+        }
+        return;
+      }
+
+      // 處理贈送商品
+      if(item.includes('🎁贈送:')){
+        // 格式: "🎁贈送: productName xQty"
+        const match=item.match(/🎁贈送:\s*(.+?)\s*x(\d+)/);
+        if(match){
+          const productName=match[1].trim();
+          const qty=parseInt(match[2]);
+
+          // 判斷是蛋糕還是飲料
+          if(cakeNames.includes(productName)){
+            if(!stats.cakes[productName]){
+              stats.cakes[productName]={regular:0, voucher:0, gift:0};
+            }
+            stats.cakes[productName].gift+=qty;
+          }else if(drinkNames.includes(productName)){
+            if(!stats.drinks[productName]){
+              stats.drinks[productName]={regular:0, gift:0};
+            }
+            stats.drinks[productName].gift+=qty;
+          }
+        }
+        return;
+      }
+
+      // 提取價格並計入總金額
+      const priceMatch=item.match(/\$[\d,]+/);
+      if(priceMatch){
+        const price=parseInt(priceMatch[0].replace(/[$,]/g,''));
+        stats.totalAmount+=price;
+      }else{
+        return; // 沒有價格的項目跳過
+      }
+
+      // 判斷是蛋糕還是飲料，並提取商品名稱
+      if(item.includes('套餐:')){
+        // 套餐格式: "套餐: 蛋糕名 + 飲料名 $400"
+        const match=item.match(/套餐:\s*(.+?)\s*\+\s*(.+?)\s*\$/);
+        if(match){
+          const cakeName=match[1].trim();
+          const drinkName=match[2].trim();
+
+          if(!stats.cakes[cakeName]){
+            stats.cakes[cakeName]={regular:0, voucher:0, gift:0};
+          }
+          stats.cakes[cakeName].regular++;
+
+          if(!stats.drinks[drinkName]){
+            stats.drinks[drinkName]={regular:0, gift:0};
+          }
+          stats.drinks[drinkName].regular++;
+        }
+      }else{
+        // 單品
+        const itemName=item.replace(/\$[\d,]+/g,'').trim();
+        // 判斷是蛋糕還是飲料
+        if(itemName.includes('蛋糕')||itemName.includes('捲')||itemName.includes('提拉米蘇')){
+          if(!stats.cakes[itemName]){
+            stats.cakes[itemName]={regular:0, voucher:0, gift:0};
+          }
+          stats.cakes[itemName].regular++;
+        }else{
+          if(!stats.drinks[itemName]){
+            stats.drinks[itemName]={regular:0, gift:0};
+          }
+          stats.drinks[itemName].regular++;
+        }
+      }
+    });
+  });
+
+  // 生成 HTML 內容
+  const html=`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日下午茶總結</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,sans-serif;background:#1e3a5f;color:#f5f0eb;padding:20px;font-size:16px}
+    h1{text-align:center;margin-bottom:20px;color:#fde047}
+    .summary-box{background:#374151;border-radius:8px;padding:15px;margin-bottom:15px}
+    .summary-title{color:#f59e0b;font-weight:bold;font-size:18px;margin-bottom:10px;border-bottom:2px solid #4b5563;padding-bottom:5px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;text-align:left;border-bottom:1px solid #4b5563}
+    th{color:#f59e0b;font-weight:bold;background:#1f2937}
+    td{color:#e5e7eb}
+    .voucher-note{color:#fbbf24;font-size:14px;margin-left:6px}
+    .total-row{display:flex;justify-content:space-between;padding:12px 0;font-size:20px;font-weight:bold;color:#fde047;border-top:2px solid #f59e0b;margin-top:10px}
+    .customer-input{background:#1f2937;padding:15px;border-radius:6px;margin-top:15px}
+    .input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .input-row label{color:#fde047;min-width:120px;font-weight:bold}
+    .input-row input,.input-row select{flex:1;padding:8px;border-radius:4px;border:1px solid #4b5563;background:#374151;color:#fff;font-size:16px}
+    .calc-result{color:#4ade80;font-size:24px;font-weight:bold;margin-top:10px}
+  </style>
+</head>
+<body>
+  <h1>📊 今日下午茶總結</h1>
+
+  <div class="summary-box">
+    <div class="summary-title">☕ 商品銷售明細</div>
+    <table>
+      <tr>
+        <th style="width:30%">類別</th>
+        <th style="width:50%">商品</th>
+        <th style="text-align:right">數量</th>
+      </tr>
+      ${Object.keys(stats.cakes).length>0?Object.entries(stats.cakes).map(([name,counts],idx)=>{
+        const totalCount=counts.regular+counts.voucher+counts.gift;
+        let details=[];
+        if(counts.voucher>0)details.push('貴賓券'+counts.voucher+'份');
+        if(counts.gift>0)details.push('贈送'+counts.gift+'份');
+        const countText=details.length>0
+          ?totalCount+' 份<span class="voucher-note">('+details.join('、')+')</span>'
+          :totalCount+' 份';
+        return `
+      <tr>
+        <td>${idx===0?'<b>🍰 蛋糕</b>':''}</td>
+        <td>${name}</td>
+        <td style="text-align:right;color:#4ade80;font-weight:bold">${countText}</td>
+      </tr>`;
+      }).join(''):'<tr><td><b>🍰 蛋糕</b></td><td colspan="2">無</td></tr>'}
+      <tr style="border-top:2px solid #4b5563"><td colspan="3"></td></tr>
+      ${Object.keys(stats.drinks).length>0?Object.entries(stats.drinks).map(([name,counts],idx)=>{
+        const totalCount=counts.regular+counts.gift;
+        const countText=counts.gift>0
+          ?totalCount+' 份<span class="voucher-note">(贈送'+counts.gift+'份)</span>'
+          :totalCount+' 份';
+        return `
+      <tr>
+        <td>${idx===0?'<b>☕ 飲料</b>':''}</td>
+        <td>${name}</td>
+        <td style="text-align:right;color:#4ade80;font-weight:bold">${countText}</td>
+      </tr>`;
+      }).join(''):'<tr><td><b>☕ 飲料</b></td><td colspan="2">無</td></tr>'}
+    </table>
+  </div>
+
+  <div class="summary-box">
+    <div class="total-row">
+      <span>總金額</span>
+      <span>$${stats.totalAmount.toLocaleString()}</span>
+    </div>
+  </div>
+
+  <div class="customer-input">
+    <div class="input-row">
+      <label>來客數：</label>
+      <input type="number" id="customerCount" placeholder="請輸入來客數" oninput="calculateAverage()">
+    </div>
+    <div class="calc-result" id="avgResult">請輸入來客數以計算平均消費</div>
+  </div>
+
+  <script>
+    const TOTAL_AMOUNT = ${stats.totalAmount};
+    function calculateAverage(){
+      const count=parseInt(document.getElementById('customerCount').value)||0;
+      const result=document.getElementById('avgResult');
+      if(count>0){
+        const avg=Math.round(TOTAL_AMOUNT/count);
+        result.textContent='平均消費：$'+avg.toLocaleString()+' / 人';
+      }else{
+        result.textContent='請輸入來客數以計算平均消費';
+      }
+    }
+  <\/script>
+</body>
+</html>`;
+
+  // 開啟新視窗
+  const win=window.open('','下午茶總結','width=600,height=800');
+  win.document.write(html);
+  win.document.close();
 }
 
 async function deleteRecord(idx){
@@ -397,7 +643,8 @@ if (notesInput) {
   console.log('計算金額:', total);
   console.log('手動金額:', s.manualAmount);
   console.log('最終金額:', finalTotal);
-  console.log('備註:', s.notes);
+  console.log('備註 (s.notes):', s.notes);
+  console.log('備註輸入框值 (notesInput.value):', notesInput ? notesInput.value : 'notesInput 不存在');
 
   const allItems=[...productItems,...teaItems];
   if(allItems.length===0){alert('購物車是空的！');return}
@@ -453,7 +700,7 @@ if (notesInput) {
   }
 
   alert(msg);
-  window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m='normal';window.S.bd=false;window.S.manualAmount=0;window.S.notes='';window.S.tab='records';saveState();R();
+  window.S.cart={};window.S.tv=0;window.S.tb=0;window.S.td=1;window.S.xm=false;window.S.m='normal';window.S.bd=false;window.S.manualAmount=0;window.S.notes='';window.S.giftProduct='';window.S.giftQty=0;window.S.tab='records';saveState();R();
 }
 
 function R(){
@@ -497,7 +744,21 @@ function R(){
         h+='<div style="background:#1f2937;padding:8px;border-radius:4px">';
         h+='<div style="color:#60a5fa;font-weight:bold;margin-bottom:4px;font-size:15px">🍪 商品</div>';
         if(hasProducts){
-          r.productItems.forEach(it=>h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px;font-size:13px">• '+it+'</div>');
+          let productSubtotal=0;
+          r.productItems.forEach(it=>{
+            h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px;font-size:13px">• '+it+'</div>';
+            // 跳過會員資訊標記（不含價格）
+            if(it.includes('💎')||it.includes('⬜')||it.includes('👑')){
+              return; // 跳過會員資訊
+            }
+            // 提取價格（格式: "商品名 x數量 $價格"）
+            const priceMatch=it.match(/\$[\d,]+/);
+            if(priceMatch){
+              const price=parseInt(priceMatch[0].replace(/[$,]/g,''));
+              productSubtotal+=price;
+            }
+          });
+          h+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid #4b5563;color:#60a5fa;font-weight:bold;font-size:14px">小計: $'+productSubtotal.toLocaleString()+'</div>';
         }else{
           h+='<div style="color:#666;font-style:italic;font-size:13px">無</div>';
         }
@@ -505,22 +766,38 @@ function R(){
         h+='<div style="background:#1f2937;padding:8px;border-radius:4px">';
         h+='<div style="color:#fbbf24;font-weight:bold;margin-bottom:4px;font-size:15px">☕ 下午茶</div>';
         if(hasTea){
-          r.teaItems.forEach(it=>h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px;font-size:13px">• '+it+'</div>');
+          let teaSubtotal=0;
+          r.teaItems.forEach(it=>{
+            h+='<div style="color:#e5e7eb;margin:2px 0;padding-left:4px;font-size:13px">• '+it+'</div>';
+            // 跳過兌換券（貴賓券和生日禮不計入小計）
+            if(it.includes('👑貴賓券')||it.includes('🎂生日禮')){
+              return; // 跳過此項目
+            }
+            // 提取價格（格式: "商品名 x數量 $價格"）
+            const priceMatch=it.match(/\$[\d,]+/);
+            if(priceMatch){
+              const price=parseInt(priceMatch[0].replace(/[$,]/g,''));
+              teaSubtotal+=price;
+            }
+          });
+          h+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid #4b5563;color:#fbbf24;font-weight:bold;font-size:14px">小計: $'+teaSubtotal.toLocaleString()+'</div>';
         }else{
           h+='<div style="color:#666;font-style:italic;font-size:13px">無</div>';
         }
         h+='</div></div>';
-        // 顯示備註（如果有）
-        if(r.notes){
-          h+='<div style="margin-top:8px;padding:8px;background:#1f2937;border-radius:4px;border-left:3px solid #fbbf24">';
-          h+='<div style="color:#fbbf24;font-weight:bold;font-size:13px;margin-bottom:4px">📝 備註</div>';
-          h+='<div style="color:#e5e7eb;font-size:13px">'+r.notes+'</div>';
-          h+='</div>';
-        }
+        // 顯示備註（總是顯示，不論是否有內容）
+        h+='<div style="margin-top:8px;padding:8px;background:#1f2937;border-radius:4px;border-left:3px solid #fbbf24">';
+        h+='<div style="color:#fbbf24;font-weight:bold;font-size:13px;margin-bottom:4px">📝 備註</div>';
+        h+='<div style="color:#e5e7eb;font-size:13px">'+(r.notes?r.notes:'<span style="color:#666;font-style:italic">無</span>')+'</div>';
+        h+='</div>';
         h+='</div>';
       });
     }
     h+='</div>';
+    // 下午茶總結按鈕
+    if(s.h.length>0){
+      h+='<button onclick="openTeaSummary()" style="width:100%;background:#f59e0b;border:none;color:#fff;padding:14px;border-radius:6px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px">📊 下午茶總結</button>';
+    }
   }else if(s.tab==='christmas'){
     const dd=d.christmas;
     h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';saveState();R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';saveState();R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';saveState();R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;saveState();R()">生日月</label></div></div>';
@@ -543,7 +820,10 @@ function R(){
     h+='<div style="background:#374151;padding:8px;border-radius:6px;margin-bottom:8px;font-size:12px"><b style="display:block;margin-bottom:6px;color:#fde047">整單折扣:</b>';
     h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+[1,0.95,0.9,0.85,0.7].map(v=>'<button style="padding:4px 12px;border:none;border-radius:4px;cursor:pointer;'+(s.td===v?'background:#f59e0b;color:#fff;font-weight:bold':'background:#1f2937;color:#fff')+'" onclick="window.S.td='+v+';saveState();R()">'+(v===1?'無':Math.round(v*100)+'折')+'</button>').join('')+'</div>';
     h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><label style="min-width:80px">👑貴賓券:</label><div class="qty-ctrl"><button class="minus" onclick="window.S.tv=Math.max(0,window.S.tv-1);saveState();R()">-</button><input type="number" value="'+s.tv+'" onchange="window.S.tv=Math.max(0,+this.value);saveState();R()" style="width:50px"><button class="plus" onclick="window.S.tv++;saveState();R()">+</button></div><span>套</span></div>';
-    h+='<div style="display:flex;align-items:center;gap:8px"><label style="min-width:80px">🎂生日禮:</label><div class="qty-ctrl"><button class="minus" onclick="window.S.tb=Math.max(0,window.S.tb-1);saveState();R()">-</button><input type="number" value="'+s.tb+'" onchange="window.S.tb=Math.max(0,+this.value);saveState();R()" style="width:50px"><button class="plus" onclick="window.S.tb++;saveState();R()">+</button></div><span>套</span></div></div>';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><label style="min-width:80px">🎂生日禮:</label><div class="qty-ctrl"><button class="minus" onclick="window.S.tb=Math.max(0,window.S.tb-1);saveState();R()">-</button><input type="number" value="'+s.tb+'" onchange="window.S.tb=Math.max(0,+this.value);saveState();R()" style="width:50px"><button class="plus" onclick="window.S.tb++;saveState();R()">+</button></div><span>套</span></div>';
+    h+='<div style="border-top:1px solid #4b5563;padding-top:8px;margin-top:8px"><b style="display:block;margin-bottom:6px;color:#fde047">🎁 贈送商品:</b>';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="min-width:80px">商品:</label><select onchange="window.S.giftProduct=this.value;saveState();R()" style="flex:1;padding:6px;border-radius:4px;border:1px solid #4b5563;background:#374151;color:#fff"><option value="">請選擇商品</option>'+tt.cake.concat(tt.drink,tt.roll).map(p=>'<option value="'+p.name+'" '+(s.giftProduct===p.name?'selected':'')+'>'+p.name+'</option>').join('')+'</select></div>';
+    h+='<div style="display:flex;align-items:center;gap:8px"><label style="min-width:80px">數量:</label><div class="qty-ctrl"><button class="minus" onclick="window.S.giftQty=Math.max(0,window.S.giftQty-1);saveState();R()">-</button><input type="number" value="'+(s.giftQty||0)+'" onchange="window.S.giftQty=Math.max(0,+this.value);saveState();R()" style="width:50px"><button class="plus" onclick="window.S.giftQty=(window.S.giftQty||0)+1;saveState();R()">+</button></div><span>份</span></div></div></div>';
     h+='<div class="section"><h2>蛋糕</h2>'+tt.cake.map(p=>'<div class="product-row cake"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>飲品</h2>'+tt.drink.map(p=>'<div class="product-row drink"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>一整條生乳捲 <span style="font-size:13px;color:#fdba74">(不可配套餐，不適用券，可打折)</span></h2>'+tt.roll.map(p=>'<div class="product-row" style="background:#4a3f35"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
@@ -635,25 +915,44 @@ function R(){
     gt+=t;productItems.push('8入巧克力雪茄(加購) x'+q+' $'+t.toLocaleString());
   }
 
+  // 一般商品（禮盒、蛋捲、秋冬、餅乾棒、木盒）
+  let generalTotal=0;const generalItems=[];
   [{i:[...d.giftbox.general,...d.giftbox.double]},{i:[...d.cigare.original_small,...d.cigare.original_20,...d.cigare.original_large,...d.cigare.chocolate]},{i:d.autumn.items},{i:d.baton.items},{i:d.wood.items}].forEach(c=>{
-    let cf=0;const ci=[];
-    c.i.forEach(p=>{const q=Q(p.id);if(q>0){const orig=p.price*q;const f=Math.round(orig*genDis);cf+=f;ci.push({p:p,q:q,orig:orig,f:f})}});
-    if(ci.length>0){
-      ci.forEach(it=>{
-        let priceDisplay='';
-        if(genDis<1){
-          const origStr=it.orig.toLocaleString();
-          const fStr=it.f.toLocaleString();
-          priceDisplay='<span class="item-price"><span class="price-orig">$'+origStr+'</span><span class="price-final">$'+fStr+'</span></span>';
-        }else{
-          priceDisplay='<span class="price-final">$'+it.f.toLocaleString()+'</span>';
-        }
-        h+='<div class="cart-item"><span class="item-name">'+it.p.name+' x'+it.q+'</span>'+priceDisplay+'</div>';
-        productItems.push(it.p.name+' x'+it.q+' $'+it.f.toLocaleString());
-      });
-      gt+=cf;
-    }
+    c.i.forEach(p=>{const q=Q(p.id);if(q>0){const orig=p.price*q;const f=Math.round(orig*genDis);generalTotal+=f;generalItems.push({p:p,q:q,orig:orig,f:f})}});
   });
+
+  if(generalItems.length>0){
+    // 產生標題
+    let generalTitle='一般商品';
+    if(genDis<1){
+      // 有會員折扣，但檢查是否有更優惠的聖誕折扣
+      const hasLowerDiscount=boxDis<genDis;
+      if(hasLowerDiscount){
+        // 有更優惠的折扣，只顯示會員身份，不顯示折扣百分比
+        if(s.m==='blue')generalTitle+=' (💎藍鑽會員)';
+        else if(s.m==='white'&&s.bd)generalTitle+=' (⬜白鑽會員)';
+      }else{
+        // 沒有更優惠的折扣，正常顯示會員折扣
+        if(s.m==='blue')generalTitle+=s.bd?' (藍鑽生日月9折)':' (藍鑽95折)';
+        else if(s.m==='white'&&s.bd)generalTitle+=' (白鑽生日月9折)';
+      }
+    }
+    h+='<div class="cat-title">'+generalTitle+'</div>';
+
+    generalItems.forEach(it=>{
+      let priceDisplay='';
+      if(genDis<1){
+        const origStr=it.orig.toLocaleString();
+        const fStr=it.f.toLocaleString();
+        priceDisplay='<span class="item-price"><span class="price-orig">$'+origStr+'</span><span class="price-final">$'+fStr+'</span></span>';
+      }else{
+        priceDisplay='<span class="price-final">$'+it.f.toLocaleString()+'</span>';
+      }
+      h+='<div class="cart-item"><span class="item-name">'+it.p.name+' x'+it.q+'</span>'+priceDisplay+'</div>';
+      productItems.push(it.p.name+' x'+it.q+' $'+it.f.toLocaleString());
+    });
+    gt+=generalTotal;
+  }
 
   // === 下午茶計算邏輯 ===
   // 步驟1: 收集所有蛋糕、飲料和生乳捲（保留價格資訊）
@@ -806,6 +1105,12 @@ function R(){
       });
     }
 
+    // 顯示贈送商品（不計入金額）
+    if(s.giftProduct&&s.giftQty>0){
+      h+='<div class="cart-item" style="background:#2d3748"><span class="item-name">🎁 贈送: '+s.giftProduct+' x'+s.giftQty+'</span><span class="price-final" style="color:#f59e0b">贈送</span></div>';
+      teaItems.push('🎁贈送: '+s.giftProduct+' x'+s.giftQty);
+    }
+
     // 顯示小計和折扣
     if(subtotal>0){
       h+='<div class="cart-item" style="border-top:1px dashed #4b5563;padding-top:6px;margin-top:4px"><span class="item-name">小計</span><span class="price-orig">$'+subtotal.toLocaleString()+'</span></div>';
@@ -813,9 +1118,22 @@ function R(){
       // 顯示會員折扣資訊
       if(s.m!=='normal'||s.bd){
         let memberLabel='';
-        if(s.m==='blue')memberLabel=s.bd?'💎藍鑽+生日月 (9折)':'💎藍鑽 (95折)';
-        else if(s.m==='white'&&s.bd)memberLabel='⬜白鑽+生日月 (9折)';
-        else if(s.m==='white')memberLabel='⬜白鑽 (原價)';
+        const hasLowerDiscount=boxDis<genDis; // 檢查是否有更優惠的折扣（如聖誕89折）
+        if(s.m==='blue'){
+          if(hasLowerDiscount){
+            memberLabel='💎藍鑽會員'; // 有更優惠折扣時，只顯示會員身份
+          }else{
+            memberLabel=s.bd?'💎藍鑽+生日月 (9折)':'💎藍鑽 (95折)';
+          }
+        }else if(s.m==='white'&&s.bd){
+          if(hasLowerDiscount){
+            memberLabel='⬜白鑽會員'; // 有更優惠折扣時，只顯示會員身份
+          }else{
+            memberLabel='⬜白鑽+生日月 (9折)';
+          }
+        }else if(s.m==='white'){
+          memberLabel='⬜白鑽 (原價)';
+        }
 
         if(memberLabel&&s.td===1){
           // 只在沒有整單折扣時顯示會員折扣
@@ -866,10 +1184,19 @@ function R(){
 
     // 顯示會員折扣資訊
     let memberInfo='';
+    const hasLowerDiscount=boxDis<genDis; // 檢查是否有更優惠的折扣（如聖誕89折）
     if(s.m==='blue'){
-      memberInfo=s.bd?'💎藍鑽+生日月(9折)':'💎藍鑽(95折)';
+      if(hasLowerDiscount){
+        memberInfo='💎藍鑽會員'; // 有更優惠折扣時，只顯示會員身份
+      }else{
+        memberInfo=s.bd?'💎藍鑽+生日月(9折)':'💎藍鑽(95折)';
+      }
     }else if(s.m==='white'){
-      memberInfo=s.bd?'⬜白鑽+生日月(9折)':'⬜白鑽';
+      if(hasLowerDiscount&&s.bd){
+        memberInfo='⬜白鑽會員'; // 有更優惠折扣時，只顯示會員身份
+      }else{
+        memberInfo=s.bd?'⬜白鑽+生日月(9折)':'⬜白鑽';
+      }
     }
     if(memberInfo&&s.td===1){
       h+='<div class="summary-row"><span>'+memberInfo+'</span><span style="color:#60a5fa">已套用</span></div>';
@@ -908,7 +1235,7 @@ function R(){
     h+='<div style="display:flex;align-items:center;gap:8px">';
     h+='<label style="color:#fde047;min-width:80px">📝 備註:</label>';
 h+='<input id="notesInput" type="text" value="'+s.notes+'" '+
-   'oninput="window.S.notes=this.value;saveState()" '+
+   'oninput="window.S.notes=this.value;debouncedSave()" '+
    'placeholder="輸入備註..." '+
    'style="flex:1;padding:6px;border-radius:4px;border:1px solid #4b5563;background:#1f2937;color:#fff">';
 
