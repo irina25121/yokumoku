@@ -105,11 +105,13 @@ window.DATA={
     ],
     special:[
       {id:'CHOCO18',name:'18入巧克力雪茄',price:660,orig:1120},
-      {id:'YCG-AXM-3',name:'🌟YCG-AXM 3包優惠',price:1200,orig:1260},
-      {id:'YCG-AXM-5',name:'🌟YCG-AXM 5包加碼',price:1800,orig:2100}
+      {id:'CHOCO8',name:'8入巧克力雪茄',price:300}
+    ],
+    bagroll:[
+      {id:'YCG-D-2',name:'YCG-D 2盒 優惠',price:1500,orig:1840},
+      {id:'YCG-AXM-5',name:'聖誕或常規-10入袋裝，五包',price:1800,orig:2100}
     ],
     addon:[
-      {id:'CHOCO8',name:'8入巧克力雪茄(加購)',price:300}
     ]
   },
   giftbox:{
@@ -184,7 +186,8 @@ window.DATA={
     drink:[
       {id:'D1',name:'經典手沖咖啡',price:150},
       {id:'D2',name:'伊藤園蜂蜜紅茶',price:150},
-      {id:'D3',name:'伊藤園特選日式綠茶',price:150}
+      {id:'D3',name:'伊藤園特選日式綠茶',price:150},
+      {id:'D4',name:'TWG英式紅茶',price:150}
     ],
     roll:[
       {id:'T6',name:'一捲南山生乳捲(冷凍)',price:920}
@@ -869,10 +872,10 @@ function R(){
     h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';saveState();R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';saveState();R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';saveState();R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;saveState();R()">生日月</label></div></div>';
     h+='<div class="discount-info">'+(s.m==='blue'?'💎藍鑽:'+(s.bd?'生日月9折':'95折'):s.m==='white'?'⬜白鑽:'+(s.bd?'生日月9折':'原價'):'一般:原價')+' | 📦盒裝:2盒'+(s.m==='blue'||s.m==='white'?'89':'95')+'折/50盒86折/101盒85折 | 🎁袋裝:3袋以上每袋$400</div>';
     h+='<div class="section"><h2>聖誕雙拼</h2>'+dd.combo.map(p=>'<div class="product-row combo"><div class="info"><div class="name">'+p.name+'</div><div class="price">'+(p.orig?'<s style="color:#999">$'+p.orig.toLocaleString()+'</s> → ':'')+' $'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
-    h+='<div class="section"><h2>巧克力特惠</h2>'+dd.special.map(p=>'<div class="product-row special"><div class="info"><div class="name">'+p.name+'</div><div class="price"><s style="color:#999">$'+p.orig.toLocaleString()+'</s> → $'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>巧克力特惠</h2>'+dd.special.map(p=>'<div class="product-row special"><div class="info"><div class="name">'+p.name+'</div><div class="price">'+(p.orig?'<s style="color:#999">$'+p.orig.toLocaleString()+'</s> → ':'')+'$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>蛋捲優惠</h2>'+dd.bagroll.map(p=>'<div class="product-row special"><div class="info"><div class="name">'+p.name+'</div><div class="price">'+(p.orig?'<s style="color:#999">$'+p.orig.toLocaleString()+'</s> → ':'')+'$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
+    h+='<div class="section"><h2>袋裝(三袋優惠1200)</h2>'+dd.bag.map(p=>'<div class="product-row bag"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
     h+='<div class="section"><h2>盒裝</h2>'+dd.box.map(p=>'<div class="product-row brown5"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
-    h+='<div class="section"><h2>袋裝</h2>'+dd.bag.map(p=>'<div class="product-row bag"><div class="info"><div class="name">'+p.name+'</div><div class="price">$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id)+'</div>').join('')+'</div>';
-    h+='<div class="section"><h2>加購</h2>'+dd.addon.map(p=>'<div class="product-row addon"><div class="info"><div class="name">'+p.name+'</div><div class="price">+$'+p.price.toLocaleString()+'</div></div>'+Q2(p.id,!(d.christmas.box.some(x=>Q(x.id)>0)||d.christmas.bag.some(x=>Q(x.id)>0)||d.christmas.combo.some(x=>Q(x.id)>0)))+'</div>').join('')+'<div class="note">※需先選購聖誕商品才能加購</div></div>';
   }else if(s.tab==='giftbox'){
     const gg=d.giftbox;
     h+='<div class="member-section"><div class="member-row"><button class="'+(s.m==='normal'?'active':'')+'" onclick="window.S.m=\'normal\';saveState();R()">一般</button><button class="'+(s.m==='blue'?'active':'')+'" onclick="window.S.m=\'blue\';saveState();R()">💎藍鑽</button><button class="'+(s.m==='white'?'active':'')+'" onclick="window.S.m=\'white\';saveState();R()">⬜白鑽</button><label><input type="checkbox"'+(s.bd?' checked':'')+' onchange="window.S.bd=this.checked;saveState();R()">生日月</label></div></div>';
@@ -923,10 +926,64 @@ function R(){
     d.christmas.combo.forEach(p=>{const q=Q(p.id);if(q>0){const t=p.price*q;h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+t.toLocaleString()+'</span></div>';gt+=t;productItems.push(p.name+' x'+q+' $'+t.toLocaleString())}});
   }
 
-  if(Q('CHOCO18')>0){
-    const p=d.christmas.special[0];const q=Q('CHOCO18');const f=p.price*q;
-    h+='<div class="cat-title">巧克力特惠 <span style="font-size:13px;color:#fdba74">(特惠價，不適用會員折扣)</span></div><div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+f.toLocaleString()+'</span></div>';
-    gt+=f;productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
+  if(Q('CHOCO18')>0 || Q('CHOCO8')>0){
+    h+='<div class="cat-title">巧克力特惠 <span style="font-size:13px;color:#fdba74">(特惠價，不適用會員折扣)</span></div>';
+    if(Q('CHOCO18')>0){
+      const p=d.christmas.special[0];const q=Q('CHOCO18');const f=p.price*q;
+      h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+f.toLocaleString()+'</span></div>';
+      gt+=f;productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
+    }
+    if(Q('CHOCO8')>0){
+      const q=Q('CHOCO8');const t=300*q;
+      h+='<div class="cart-item"><span class="item-name">8入巧克力雪茄 x'+q+'</span><span class="price-final">$'+t.toLocaleString()+'</span></div>';
+      gt+=t;productItems.push('8入巧克力雪茄 x'+q+' $'+t.toLocaleString());
+    }
+  }
+
+  if(Q('YCG-D-2')>0 || Q('YCG-AXM-5')>0){
+    h+='<div class="cat-title">蛋捲優惠 <span style="font-size:13px;color:#fdba74">(特惠價，不適用會員折扣)</span></div>';
+    d.christmas.bagroll.forEach(p=>{
+      const q=Q(p.id);
+      if(q>0){
+        const f=p.price*q;
+        h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span><span class="price-final">$'+f.toLocaleString()+'</span></div>';
+        gt+=f;productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
+      }
+    });
+  }
+
+  let bagCnt=0,bagOrig=0;
+  d.christmas.bag.forEach(p=>{const q=Q(p.id);if(q>0){bagCnt+=q;bagOrig+=p.price*q}});
+  if(bagCnt>0){
+    let bagDiscount=1;
+    if(bagCnt>=3)bagDiscount=Math.min(1,(bagCnt*400)/bagOrig);
+    if(s.teaGiftDiscount)bagDiscount=Math.min(bagDiscount,0.95);
+    const bagFinal=Math.round(bagOrig*bagDiscount);
+    const isMultiBag=bagCnt>=3&&(bagCnt*400)<bagOrig;
+    const isTeaDiscount=s.teaGiftDiscount&&bagDiscount===0.95;
+    let bagLabel='袋裝(三袋優惠1200)';
+    if(isTeaDiscount)bagLabel+=' (下午茶加購95折)';
+    else if(isMultiBag)bagLabel+=' (每袋$400) <span style="font-size:13px;color:#fdba74">(優惠價)</span>';
+    h+='<div class="cat-title">'+bagLabel+'</div>';
+    d.christmas.bag.forEach(p=>{
+      const q=Q(p.id);
+      if(q>0){
+        const orig=p.price*q;
+        const f=Math.round(orig*bagDiscount);
+        const unitPriceOrig=p.price;
+        const unitPriceFinal=Math.round(p.price*bagDiscount);
+        let priceDisplay='';
+        if(bagDiscount<1){
+          const discountPercent=Math.round(bagDiscount*100);
+          priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/袋</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/袋</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
+        }else{
+          priceDisplay='<span class="price-final">$'+unitPriceFinal+'/袋<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
+        }
+        h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span>'+priceDisplay+'</div>';
+        productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
+      }
+    });
+    gt+=bagFinal;
   }
 
   let boxCnt=0,boxOrig=0;
@@ -939,58 +996,20 @@ function R(){
       if(q>0){
         const orig=p.price*q;
         const f=Math.round(orig*boxDis);
+        const unitPriceOrig=p.price;
+        const unitPriceFinal=Math.round(p.price*boxDis);
         let priceDisplay='';
         if(boxDis<1){
-          const origStr=orig.toLocaleString();
-          const fStr=f.toLocaleString();
-          priceDisplay='<span class="item-price"><span class="price-orig">$'+origStr+'</span><span class="price-final">$'+fStr+'</span></span>';
+          const discountPercent=Math.round(boxDis*100);
+          priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/盒</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/盒</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
         }else{
-          priceDisplay='<span class="price-final">$'+f.toLocaleString()+'</span>';
+          priceDisplay='<span class="price-final">$'+unitPriceFinal+'/盒<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
         }
         h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span>'+priceDisplay+'</div>';
         productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
       }
     });
     gt+=boxFinal;
-  }
-
-  let bagCnt=0,bagOrig=0;
-  d.christmas.bag.forEach(p=>{const q=Q(p.id);if(q>0){bagCnt+=q;bagOrig+=p.price*q}});
-  if(bagCnt>0){
-    let bagDiscount=1;
-    if(bagCnt>=3)bagDiscount=Math.min(1,(bagCnt*400)/bagOrig);
-    if(s.teaGiftDiscount)bagDiscount=Math.min(bagDiscount,0.95);
-    const bagFinal=Math.round(bagOrig*bagDiscount);
-    const isMultiBag=bagCnt>=3&&(bagCnt*400)<bagOrig;
-    const isTeaDiscount=s.teaGiftDiscount&&bagDiscount===0.95;
-    let bagLabel='聖誕袋裝';
-    if(isTeaDiscount)bagLabel+=' (下午茶加購95折)';
-    else if(isMultiBag)bagLabel+=' (每袋$400) <span style="font-size:13px;color:#fdba74">(優惠價)</span>';
-    h+='<div class="cat-title">'+bagLabel+'</div>';
-    d.christmas.bag.forEach(p=>{
-      const q=Q(p.id);
-      if(q>0){
-        const orig=p.price*q;
-        const f=Math.round(orig*bagDiscount);
-        let priceDisplay='';
-        if(bagDiscount<1){
-          const origStr=orig.toLocaleString();
-          const fStr=f.toLocaleString();
-          priceDisplay='<span class="item-price"><span class="price-orig">$'+origStr+'</span><span class="price-final">$'+fStr+'</span></span>';
-        }else{
-          priceDisplay='<span class="price-final">$'+f.toLocaleString()+'</span>';
-        }
-        h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span>'+priceDisplay+'</div>';
-        productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
-      }
-    });
-    gt+=bagFinal;
-  }
-
-  if(Q('CHOCO8')>0){
-    const q=Q('CHOCO8');const t=300*q;
-    h+='<div class="cat-title">加購 <span style="font-size:13px;color:#fdba74">(加購價，不適用會員折扣)</span></div><div class="cart-item"><span class="item-name">8入巧克力雪茄 x'+q+'</span><span class="price-final">$'+t.toLocaleString()+'</span></div>';
-    gt+=t;productItems.push('8入巧克力雪茄(加購) x'+q+' $'+t.toLocaleString());
   }
 
   // 一般商品（禮盒、蛋捲、秋冬、餅乾棒、木盒）
@@ -1018,13 +1037,14 @@ function R(){
     h+='<div class="cat-title">'+generalTitle+'</div>';
 
     generalItems.forEach(it=>{
+      const unitPriceOrig=it.p.price;
+      const unitPriceFinal=Math.round(it.p.price*genDis);
       let priceDisplay='';
       if(genDis<1){
-        const origStr=it.orig.toLocaleString();
-        const fStr=it.f.toLocaleString();
-        priceDisplay='<span class="item-price"><span class="price-orig">$'+origStr+'</span><span class="price-final">$'+fStr+'</span></span>';
+        const discountPercent=Math.round(genDis*100);
+        priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/盒</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/盒</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+it.f.toLocaleString()+'</span></span>';
       }else{
-        priceDisplay='<span class="price-final">$'+it.f.toLocaleString()+'</span>';
+        priceDisplay='<span class="price-final">$'+unitPriceFinal+'/盒<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+it.f.toLocaleString()+'</span></span>';
       }
       h+='<div class="cart-item"><span class="item-name">'+it.p.name+' x'+it.q+'</span>'+priceDisplay+'</div>';
       productItems.push(it.p.name+' x'+it.q+' $'+it.f.toLocaleString());
@@ -1186,32 +1206,6 @@ function R(){
     if(subtotal>0){
       h+='<div class="cart-item" style="border-top:1px dashed #4b5563;padding-top:6px;margin-top:4px"><span class="item-name">小計</span><span class="price-orig">$'+subtotal.toLocaleString()+'</span></div>';
 
-      // 顯示會員折扣資訊
-      if(s.m!=='normal'||s.bd){
-        let memberLabel='';
-        const hasLowerDiscount=boxDis<genDis; // 檢查是否有更優惠的折扣（如聖誕89折）
-        if(s.m==='blue'){
-          if(hasLowerDiscount){
-            memberLabel='💎藍鑽會員'; // 有更優惠折扣時，只顯示會員身份
-          }else{
-            memberLabel=s.bd?'💎藍鑽+生日月 (9折)':'💎藍鑽 (95折)';
-          }
-        }else if(s.m==='white'&&s.bd){
-          if(hasLowerDiscount){
-            memberLabel='⬜白鑽會員'; // 有更優惠折扣時，只顯示會員身份
-          }else{
-            memberLabel='⬜白鑽+生日月 (9折)';
-          }
-        }else if(s.m==='white'){
-          memberLabel='⬜白鑽 (原價)';
-        }
-
-        if(memberLabel&&s.td===1){
-          // 只在沒有整單折扣時顯示會員折扣
-          h+='<div class="cart-item"><span class="item-name">'+memberLabel+'</span><span class="price-final" style="color:#60a5fa">已套用</span></div>';
-        }
-      }
-
       // 顯示整單折扣（如果有）
       if(s.td<1){
         h+='<div class="cart-item"><span class="item-name">整單折扣 ('+Math.round(s.td*100)+'折)</span><span class="price-final" style="color:#f59e0b">已套用</span></div>';
@@ -1296,7 +1290,8 @@ function R(){
   console.log('下午茶數量:', teaItems.length, '項目:', teaItems);
   console.log('原價:', originalTotal, '折扣:', discount, '總金額:', gt);
 
-    // 下午茶加購禮盒九五折勾選框
+  // 下午茶加購禮盒九五折勾選框（只在非下午茶頁面顯示）
+  if(s.tab !== 'tea'){
     h+='<div style="background:#374151;padding:10px;border-radius:6px;margin-bottom:10px">';
     h+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#fde047;font-size:16px">';
     h+='<input type="checkbox"'+(s.teaGiftDiscount?' checked':'')+' onchange="window.S.teaGiftDiscount=this.checked;saveState();R()" style="width:18px;height:18px;cursor:pointer">';
@@ -1306,6 +1301,7 @@ function R(){
       h+='<div style="margin-top:6px;padding:6px;background:#1f2937;border-radius:4px;font-size:13px;color:#e5e7eb">勾選後，禮盒及其他分頁商品（蛋捲、秋冬、餅乾棒、木盒）享95折，聖誕特價商品除外</div>';
     }
     h+='</div>';
+  }
 
     // 手動修改金額和備註區塊
     h+='<div style="background:#374151;padding:10px;border-radius:6px;margin-bottom:10px">';
