@@ -956,11 +956,16 @@ function R(){
   d.christmas.bag.forEach(p=>{const q=Q(p.id);if(q>0){bagCnt+=q;bagOrig+=p.price*q}});
   if(bagCnt>0){
     let bagDiscount=1;
-    if(bagCnt>=3)bagDiscount=Math.min(1,(bagCnt*400)/bagOrig);
-    if(s.teaGiftDiscount)bagDiscount=Math.min(bagDiscount,0.95);
+    if(bagCnt>=3){
+      // 三袋以上享受每袋400優惠，不叠加其他折扣
+      bagDiscount=Math.min(1,(bagCnt*400)/bagOrig);
+    }else{
+      // 少於3袋才能享受下午茶加購95折
+      if(s.teaGiftDiscount)bagDiscount=0.95;
+    }
     const bagFinal=Math.round(bagOrig*bagDiscount);
     const isMultiBag=bagCnt>=3&&(bagCnt*400)<bagOrig;
-    const isTeaDiscount=s.teaGiftDiscount&&bagDiscount===0.95;
+    const isTeaDiscount=!isMultiBag&&s.teaGiftDiscount&&bagDiscount===0.95;
     let bagLabel='袋裝(三袋優惠1200)';
     if(isTeaDiscount)bagLabel+=' (下午茶加購95折)';
     else if(isMultiBag)bagLabel+=' (每袋$400) <span style="font-size:13px;color:#fdba74">(優惠價)</span>';
@@ -972,14 +977,15 @@ function R(){
         const f=Math.round(orig*bagDiscount);
         const unitPriceOrig=p.price;
         const unitPriceFinal=Math.round(p.price*bagDiscount);
+        const qtyLabel='<span style="color:#fbbf24"> x'+q+'</span>';
         let priceDisplay='';
         if(bagDiscount<1){
           const discountPercent=Math.round(bagDiscount*100);
-          priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/袋</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/袋</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
+          priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/袋</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/袋'+qtyLabel+'</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
         }else{
-          priceDisplay='<span class="price-final">$'+unitPriceFinal+'/袋<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
+          priceDisplay='<span class="price-final">$'+unitPriceFinal+'/袋'+qtyLabel+'<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
         }
-        h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span>'+priceDisplay+'</div>';
+        h+='<div class="cart-item"><span class="item-name">'+p.name+qtyLabel+'</span>'+priceDisplay+'</div>';
         productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
       }
     });
@@ -998,14 +1004,15 @@ function R(){
         const f=Math.round(orig*boxDis);
         const unitPriceOrig=p.price;
         const unitPriceFinal=Math.round(p.price*boxDis);
+        const qtyLabel='<span style="color:#fbbf24"> x'+q+'</span>';
         let priceDisplay='';
         if(boxDis<1){
           const discountPercent=Math.round(boxDis*100);
-          priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/盒</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/盒</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
+          priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/盒</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/盒'+qtyLabel+'</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
         }else{
-          priceDisplay='<span class="price-final">$'+unitPriceFinal+'/盒<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
+          priceDisplay='<span class="price-final">$'+unitPriceFinal+'/盒'+qtyLabel+'<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+f.toLocaleString()+'</span></span>';
         }
-        h+='<div class="cart-item"><span class="item-name">'+p.name+' x'+q+'</span>'+priceDisplay+'</div>';
+        h+='<div class="cart-item"><span class="item-name">'+p.name+qtyLabel+'</span>'+priceDisplay+'</div>';
         productItems.push(p.name+' x'+q+' $'+f.toLocaleString());
       }
     });
@@ -1039,14 +1046,15 @@ function R(){
     generalItems.forEach(it=>{
       const unitPriceOrig=it.p.price;
       const unitPriceFinal=Math.round(it.p.price*genDis);
+      const qtyLabel='<span style="color:#fbbf24"> x'+it.q+'</span>';
       let priceDisplay='';
       if(genDis<1){
         const discountPercent=Math.round(genDis*100);
-        priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/盒</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/盒</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+it.f.toLocaleString()+'</span></span>';
+        priceDisplay='<span class="item-price"><span class="price-orig">原價$'+unitPriceOrig+'/盒</span><span style="color:#fdba74;font-size:14px">'+discountPercent+'折</span><span class="price-final">$'+unitPriceFinal+'/盒'+qtyLabel+'</span><span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+it.f.toLocaleString()+'</span></span>';
       }else{
-        priceDisplay='<span class="price-final">$'+unitPriceFinal+'/盒<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+it.f.toLocaleString()+'</span></span>';
+        priceDisplay='<span class="price-final">$'+unitPriceFinal+'/盒'+qtyLabel+'<span style="color:#4ade80;font-weight:bold;margin-left:8px">總額$'+it.f.toLocaleString()+'</span></span>';
       }
-      h+='<div class="cart-item"><span class="item-name">'+it.p.name+' x'+it.q+'</span>'+priceDisplay+'</div>';
+      h+='<div class="cart-item"><span class="item-name">'+it.p.name+qtyLabel+'</span>'+priceDisplay+'</div>';
       productItems.push(it.p.name+' x'+it.q+' $'+it.f.toLocaleString());
     });
     gt+=generalTotal;
